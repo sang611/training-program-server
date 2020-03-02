@@ -12,39 +12,31 @@ exports.login = async (req, res) => {
         username: req.body.username
       }
     });
-    if (account) {
-      bcrypt.compare(req.body.password, account.password, (err, result) => {
-        if (err) {
-          return res.status(401).json({
-            message: messages.MSG_FAIL_LOGIN
-          });
-        } 
-        if (result) {
-          const token = jwt.sign({
-            uuid: account.uuid,
-            username: account.username,
-            role: account.role
-          }, process.env.JWT_KEY
-          );
-          
-          res.cookie(constants.ACCESS_TOKEN, token, {
-            expires: new Date(Date.now() + constants.TOKEN_EXPIRES),
-            overwrite: true,
-          });
-          
-          return res.status(200).json({
-            message: messages.MSG_SUCCESS,
-            token
-          });
-        }
-        return res.status(401).json({
-          message: messages.MSG_FAIL_LOGIN
-        });
-      })
+    if (account) {      
+      const match = await bcrypt.compare(req.body.password, account.password);
+    if (match) {
+      const token = jwt.sign({
+        uuid: account.uuid,
+        username: account.username,
+        role: account.role
+      }, process.env.JWT_KEY
+      );
+      
+      res.cookie(constants.ACCESS_TOKEN, token, {
+        expires: new Date(Date.now() + constants.TOKEN_EXPIRES),
+        overwrite: true,
+      });
+      
+      return res.status(200).json({
+        message: messages.MSG_SUCCESS,
+        token
+      });
     } else {
       return res.status(401).json({
         message: messages.MSG_FAIL_LOGIN
       });
+    }
+      
     }
   } catch (error) {
     return res.status(401).json({

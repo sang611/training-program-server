@@ -11,17 +11,10 @@ const constructSearchQuery = require('../../lib/utils/constructSearchQuery');
 
 exports.createEmployee = async (req, res) => {
   //encrypt password
-  let hashPassword;
-  bcrypt.hash(req.body.password, saltRounds, async(err, hash) => {
-    if (err) {
-      return res.status(500).json({
-        message: messages.MSG_CANNOT_CREATE + constants.EMPLOYEE
-      });
-    }
-    hashPassword = hash;
+  const hashPassword = await bcrypt.hash(req.body.password, saltRounds);
+  if (hashPassword) {
     const accountUuid = uuid();
     let transaction;
-
     try {
       //check if username exists
       const account = await Account.findOne({
@@ -58,13 +51,13 @@ exports.createEmployee = async (req, res) => {
         message: messages.MSG_SUCCESS
       });
     }
-    catch (err) {
-      if (transaction) await transaction.rollback();
-      res.status(500).json({
-        message: messages.MSG_CANNOT_CREATE + constants.EMPLOYEE
-    });
-    }
-  });
+      catch (err) {
+        if (transaction) await transaction.rollback();
+        res.status(500).json({
+          message: messages.MSG_CANNOT_CREATE + constants.EMPLOYEE
+      });
+  }
+};
 }
 
 exports.getAllEmployees = async (req, res) => {
