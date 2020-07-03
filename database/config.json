@@ -1,16 +1,16 @@
 {
   "dev": {
-      "dialect": "mysql",
-      "host":"localhost",
-      "port":"3306",
-      "user": "root",
-      "password": "",
-      "database": "training_program_db",
-      "pool":{
-        "max": 5,
-        "min": 0,
-        "acquire": 30000,
-        "idle": 10000
-      }
+    "dialect": "mysql",
+    "host": "localhost",
+    "port": "3306",
+    "user": "root",
+    "password": "5654577q",
+    "database": "training_program_db",
+    "pool": {
+      "max": 5,
+      "min": 0,
+      "acquire": 30000,
+      "idle": 10000
+    }
   }
-} 
+}
