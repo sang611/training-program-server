@@ -4,8 +4,9 @@ const institutionController = require('../controllers/institution');
 const checkAuth = require('../../middlewares/checkAuthentication');
 const checkRole = require('../../middlewares/checkRole');
 const roles = require('../../lib/constants/roles');
+const multer = require('multer')();
 
-router.post('/', institutionController.createInstitution);
+router.post('/', checkAuth, multer.single('logo'),  institutionController.createInstitution);
 router.get('/', checkAuth, checkRole(roles.MODERATOR), institutionController.getAllInstitutions);
 router.delete('/:uuid', institutionController.deleteInstitution);
 router.put('/:uuid', institutionController.updateInstitution);

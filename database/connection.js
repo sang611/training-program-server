@@ -15,9 +15,6 @@ const sequelize = new Sequelize(
   } 
 );
 
-sequelize.sync({  
-  force: false
-});
 
 connection.sequelize = sequelize;
 

@@ -1,5 +1,7 @@
 const Sequelize = require('sequelize');
 const connection = require('../database/connection');
+const Student = require("./Student");
+const Employee = require("./Employee");
 
 const Account = connection.sequelize.define(
   'account',
@@ -20,5 +22,8 @@ const Account = connection.sequelize.define(
     }
   }
 );
+
+Account.hasOne(Student);
+Account.hasOne(Employee);
 
 module.exports = Account;

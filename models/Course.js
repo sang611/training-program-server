@@ -6,6 +6,16 @@ const Course = connection.sequelize.define("course", {
     type: Sequelize.UUID,
     primaryKey: true,
   },
+  course_code: {
+    type: Sequelize.STRING(7),
+    unique: true,
+  },
+  course_name_vi: {
+    type: Sequelize.TEXT
+  },
+  course_name_en: {
+    type: Sequelize.TEXT
+  },
   credits: {
     type: Sequelize.INTEGER,
   },

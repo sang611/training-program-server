@@ -3,8 +3,10 @@ const messages = require("../lib/constants/messages");
 
 module.exports = (req, res, next) => {
   try {
+
     if (req.cookies.access_token) {
       const decoded = jwt.verify(req.cookies.access_token, process.env.JWT_KEY);
+      console.log(decoded)
       req.role = decoded.role;
       next();
     } else {

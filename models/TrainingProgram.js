@@ -1,12 +1,16 @@
 const Sequelize = require("sequelize");
 const connection = require("../database/connection");
+const Institution = require("./Institution");
 
-const TrainingProgram = connection.sequelize.define("trainingProgram", {
+const TrainingProgram = connection.sequelize.define("training_program", {
   uuid: {
     type: Sequelize.UUID,
     primaryKey: true,
   },
-  name: {
+  vn_name: {
+    type: Sequelize.STRING,
+  },
+  en_name: {
     type: Sequelize.STRING,
   },
   training_program_code: {
@@ -27,8 +31,17 @@ const TrainingProgram = connection.sequelize.define("trainingProgram", {
   duration: {
     type: Sequelize.INTEGER,
   },
-  admission_info: {
+  admission_method: {
     type: Sequelize.TEXT,
+  },
+  admission_scale: {
+    type: Sequelize.TEXT,
+  },
+  common_destination: {
+    type: Sequelize.TEXT
+  },
+  specific_destination: {
+    type: Sequelize.TEXT
   },
   lock_edit: {
     type: Sequelize.TINYINT,
@@ -39,6 +52,8 @@ const TrainingProgram = connection.sequelize.define("trainingProgram", {
   modified_date: {
     type: Sequelize.DATE,
   },
+
 });
+
 
 module.exports = TrainingProgram;

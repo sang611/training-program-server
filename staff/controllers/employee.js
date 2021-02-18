@@ -8,61 +8,157 @@ const messages = require("../../lib/constants/messages");
 const constants = require("../../lib/constants/constants");
 const paginate = require("../../lib/utils/paginate");
 const constructSearchQuery = require("../../lib/utils/constructSearchQuery");
+const readXlsxFile = require("read-excel-file/node");
 
 exports.createEmployee = async (req, res) => {
-  //encrypt password
   const hashPassword = await bcrypt.hash(req.body.password, saltRounds);
-  if (hashPassword) {
-    const accountUuid = uuid();
-    let transaction;
-    try {
-      //check if username exists
-      const account = await Account.findOne({
-        where: {
-          username: req.body.username,
-        },
-      });
-      if (account) {
-        return res.status(409).json({
-          message: messages.MSG_USERNAME_EXISTS,
-        });
-      }
-      transaction = await connection.sequelize.transaction();
-      await Account.create(
-        {
-          username: req.body.username,
-          password: hashPassword,
-          uuid: accountUuid,
-          role: req.body.role,
-        },
-        { transaction }
-      );
-      await Employee.create(
-        {
-          uuid: uuid(),
-          fullname: req.body.fullname,
-          academic_rank: req.body.academic_rank,
-          academic_degree: req.body.academic_degree,
-          email: req.body.email,
-          vnu_mail: req.body.vnu_mail,
-          phone_number: req.body.phone_number,
-          note: req.body.note,
-          accountUuid: accountUuid,
-          institutionUuid: req.body.institutionUuid,
-        },
-        { transaction }
-      );
-      await transaction.commit();
-      res.status(200).json({
-        message: messages.MSG_SUCCESS,
-      });
-    } catch (err) {
-      if (transaction) await transaction.rollback();
-      res.status(500).json({
-        message: messages.MSG_CANNOT_CREATE + constants.EMPLOYEE + err,
+  const accountUuid = uuid();
+  let transaction;
+  try {
+    const account = await Account.findOne({
+      where: {
+        username: req.body.vnu_mail,
+      },
+    });
+    if (account) {
+      return res.status(409).json({
+        message: messages.MSG_USERNAME_EXISTS,
       });
     }
+    transaction = await connection.sequelize.transaction();
+    await Account.create(
+      {
+        username: req.body.vnu_mail,
+        password: hashPassword,
+        uuid: accountUuid,
+        role: req.body.role,
+      },
+      { transaction }
+    );
+    await Employee.create(
+      {
+        uuid: uuid(),
+        fullname: req.body.full_name,
+        birthday: req.body.birth_date,
+        gender: req.body.gender,
+        academic_rank: req.body.academic_rank,
+        academic_degree: req.body.academic_degree,
+        email: req.body.email,
+        vnu_mail: req.body.vnu_mail,
+        phone_number: req.body.phone_number,
+        note: req.body.note,
+        accountUuid: accountUuid,
+        institutionUuid: req.body.institution,
+      },
+      { transaction }
+    );
+    await transaction.commit();
+    res.status(200).json({
+      message: messages.MSG_SUCCESS,
+    });
+  } catch (error) {
+    if (transaction) {
+      try {
+        await transaction.rollback();
+      } catch (e) {
+        res.status(500).json({
+          error: e.toString(),
+        });
+      }
+    }
+    res.status(500).json({
+      message: messages.MSG_CANNOT_CREATE + constants.EMPLOYEE + error,
+    });
   }
+};
+
+exports.createEmployeesByFile = async (req, res) => {
+  let filePath =
+    "/Web/KLTN/training-scheme-backend/uploads/" + req.file.filename;
+  let listEmployees = [];
+  let listAccounts = [];
+  let listAccountId = [];
+  let transaction;
+  readXlsxFile(filePath)
+    .then(async (rows) => {
+      rows.shift();
+      try {
+        await Promise.all(
+          rows.map(async (row) => {
+            const account = await Account.findOne({
+              where: {
+                username: row[8],
+              },
+            });
+            if (account) {
+              return res.status(409).json({
+                message: messages.MSG_USERNAME_EXISTS,
+              });
+            }
+          })
+        );
+
+        await Promise.all(
+          rows.map(async (row) => {
+            const accountUuid = uuid();
+            const hashPassword = await bcrypt.hash(
+              row[9].toString(),
+              saltRounds
+            );
+
+            const account = {
+              username: row[8],
+              password: hashPassword,
+              uuid: accountUuid,
+              role: null,
+            };
+            listAccounts.push(account);
+
+            const newEmployee = {
+              uuid: uuid(),
+              fullname: row[1],
+              academic_rank: row[6],
+              academic_degree: row[7],
+              email: row[4],
+              vnu_mail: row[8],
+              phone_number: row[5],
+              note: "",
+              birthday: row[2],
+              gender: row[3],
+              accountUuid,
+              institutionUuid: "3f8d5b1b-33f2-4334-8624-18a6ad47e839",
+            };
+            listEmployees.push(newEmployee);
+          })
+        );
+
+        transaction = await connection.sequelize.transaction();
+
+        await Account.bulkCreate(listAccounts, { transaction });
+
+        await Employee.bulkCreate(listEmployees, { transaction });
+        await transaction.commit();
+        res.status(200).json({
+          message: messages.MSG_SUCCESS,
+        });
+      } catch (e) {
+        if (transaction) {
+          try {
+            await transaction.rollback();
+          } catch (e) {
+            res.status(500).json({
+              error: e.toString(),
+            });
+          }
+        }
+        res.status(500).json({
+          message: messages.MSG_CANNOT_CREATE + constants.EMPLOYEE + e,
+        });
+      }
+    })
+    .catch((err) => {
+      res.status(500).json(err);
+    });
 };
 
 exports.getAllEmployees = async (req, res) => {
@@ -82,7 +178,7 @@ exports.getAllEmployees = async (req, res) => {
       include: [
         {
           model: Account,
-          where: accountSearchQuery,
+          where: accountSearchQuery,  
         },
       ],
     });
@@ -101,7 +197,7 @@ exports.getAllEmployees = async (req, res) => {
       ...paginate({ page, pageSize }),
     });
     res.status(200).json({
-      employees: employees,
+      accounts: employees,
       totalResults: total,
       totalPages: totalPages,
     });

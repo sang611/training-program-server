@@ -25,6 +25,5 @@ const CourseCode = connection.sequelize.define(
   }
 );
 
-CourseCode.hasMany(Course);
 
 module.exports = CourseCode;
