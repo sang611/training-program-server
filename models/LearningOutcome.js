@@ -17,7 +17,5 @@ const LearningOutcome = connection.sequelize.define("learning_outcome", {
   },
 });
 
-// ExaminationShift.belongsToMany(Course, { through: ExaminationShiftCourse });
-// Course.belongsToMany(ExaminationShift, { through: ExaminationShiftCourse });
 
 module.exports = LearningOutcome;

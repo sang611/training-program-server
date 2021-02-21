@@ -32,7 +32,7 @@ exports.createStudent = async (req, res) => {
                 username: req.body.vnu_mail,
                 password: hashPassword,
                 uuid: accountUuid,
-                role: req.body.role,
+                role: 3,
             },
             {transaction}
         );
@@ -111,7 +111,7 @@ exports.createStudentsByFile = async (req, res) => {
                             username: row[8],
                             password: hashPassword,
                             uuid: accountUuid,
-                            role: null,
+                            role: 3,
                         };
                         listAccounts.push(account);
 

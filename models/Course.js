@@ -7,7 +7,7 @@ const Course = connection.sequelize.define("course", {
     primaryKey: true,
   },
   course_code: {
-    type: Sequelize.STRING(7),
+    type: Sequelize.UUID,
     unique: true,
   },
   course_name_vi: {

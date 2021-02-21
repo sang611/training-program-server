@@ -13,6 +13,7 @@ const institutionRoutes = require("./staff/routes/institution");
 const majorRoutes = require("./staff/routes/major");
 const learningOutcomeRoutes = require("./staff/routes/learningOutcome");
 const courseCodeRoutes = require("./staff/routes/courseCode");
+const courseRoutes = require("./staff/routes/course");
 const legalDocumentRoutes = require("./staff/routes/legalDocument");
 const trainingProgramRouter = require("./staff/routes/trainingProgram");
 const sync = require("./database/sync")
@@ -37,6 +38,7 @@ app.use("/institutions", institutionRoutes);
 app.use("/majors", majorRoutes);
 app.use("/learning-outcomes", learningOutcomeRoutes);
 app.use("/course-codes", courseCodeRoutes);
+app.use("/courses", courseRoutes);
 app.use("/documents", legalDocumentRoutes);
 app.use("/training-programs", trainingProgramRouter);
 

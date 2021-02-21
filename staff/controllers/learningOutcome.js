@@ -5,6 +5,7 @@ const constants = require('../../lib/constants/constants');
 const Op = require('sequelize').Op
 
 exports.createLearningOutcome = async (req, res) => {
+  const {contents} = req.body;
   try {
     if (req.body.parent_uuid) {
       const parent = await LearningOutcome.findOne({
@@ -18,12 +19,18 @@ exports.createLearningOutcome = async (req, res) => {
         });
       }
     }
-    await LearningOutcome.create({
-      uuid: uuid(),
-      parent_uuid: req.body.parent_uuid,
-      content: req.body.content,
-      order: req.body.order,
-    })
+
+
+    await Promise.all(
+        contents.map(async (content) => {
+          await LearningOutcome.create({
+            uuid: uuid(),
+            parent_uuid: req.body.parent_uuid,
+            content: content.content,
+          })
+        })
+    );
+
     res.status(200).json({
       message: messages.MSG_SUCCESS
     });
@@ -37,7 +44,12 @@ exports.createLearningOutcome = async (req, res) => {
 exports.getAllLearningOutcomes = async (req, res) => {
   try {
     const learningOutcomes = await LearningOutcome.findAll({
-      order: [[constants.ORDER, constants.ASC]]
+      include: [
+        {
+          model: LearningOutcome,
+        }
+      ]
+      //order: [[constants.ORDER, constants.ASC]]
     });
     res.status(200).json({
       learningOutcomes: learningOutcomes

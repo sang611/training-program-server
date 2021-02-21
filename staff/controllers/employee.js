@@ -31,7 +31,7 @@ exports.createEmployee = async (req, res) => {
         username: req.body.vnu_mail,
         password: hashPassword,
         uuid: accountUuid,
-        role: req.body.role,
+        role: 1,
       },
       { transaction }
     );
@@ -77,7 +77,6 @@ exports.createEmployeesByFile = async (req, res) => {
     "/Web/KLTN/training-scheme-backend/uploads/" + req.file.filename;
   let listEmployees = [];
   let listAccounts = [];
-  let listAccountId = [];
   let transaction;
   readXlsxFile(filePath)
     .then(async (rows) => {
@@ -110,7 +109,7 @@ exports.createEmployeesByFile = async (req, res) => {
               username: row[8],
               password: hashPassword,
               uuid: accountUuid,
-              role: null,
+              role: 1,
             };
             listAccounts.push(account);
 

@@ -94,6 +94,7 @@ exports.deleteInstitution = async (req, res) => {
 }
 
 exports.updateInstitution = async (req, res) => {
+
   try {
     const institution = await Institution.findOne({
       where: {
@@ -105,8 +106,18 @@ exports.updateInstitution = async (req, res) => {
         message: constants.INSTITUTION + messages.MSG_NOT_FOUND
       });
     }
+
+    let logoFile = req.file;
+    let logoFilePath = institution.logo;
+    if(logoFile) {
+      await uploadImageToStorage(logoFile).then((success) => {
+        logoFilePath = success;
+      }).catch((error) => {
+        console.error(error);
+      });
+    }
     await Institution.update(
-      {...req.body},
+      {...req.body, logo: logoFilePath},
       {
         where: {
           uuid: req.params.uuid
@@ -118,7 +129,7 @@ exports.updateInstitution = async (req, res) => {
     });
   } catch(error) {
     res.status(500).json({
-      message: messages.MSG_CANNOT_UPDATE + constants.INSTITUTION
+      message: messages.MSG_CANNOT_UPDATE + constants.INSTITUTION + error
     });
   }
 }

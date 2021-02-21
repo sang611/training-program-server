@@ -9,6 +9,6 @@ const multer = require('multer')();
 router.post('/', checkAuth, multer.single('logo'),  institutionController.createInstitution);
 router.get('/', checkAuth, checkRole(roles.MODERATOR), institutionController.getAllInstitutions);
 router.delete('/:uuid', institutionController.deleteInstitution);
-router.put('/:uuid', institutionController.updateInstitution);
+router.put('/:uuid', multer.single('logo'), institutionController.updateInstitution);
 
 module.exports = router;
