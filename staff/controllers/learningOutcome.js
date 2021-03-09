@@ -2,15 +2,18 @@ const LearningOutcome = require('../../models/LearningOutcome');
 const uuid = require('uuid/v4');
 const messages = require('../../lib/constants/messages');
 const constants = require('../../lib/constants/constants');
+const connection = require("../../database/connection");
+const LearningOutcomePLO_CLO = require("../../models/LearningOutcomePLO_CLO");
 const Op = require('sequelize').Op
 
 exports.createLearningOutcome = async (req, res) => {
-  const {contents} = req.body;
+  const {contents, parent_uuid, order, category} = req.body;
+  let transaction;
   try {
-    if (req.body.parent_uuid) {
+    if (parent_uuid) {
       const parent = await LearningOutcome.findOne({
         where: {
-          uuid: req.body.parent_uuid
+          uuid: parent_uuid
         }
       });
       if (!parent) {
@@ -20,23 +23,38 @@ exports.createLearningOutcome = async (req, res) => {
       }
     }
 
-
     await Promise.all(
         contents.map(async (content) => {
+          let id = await uuid();
           await LearningOutcome.create({
-            uuid: uuid(),
-            parent_uuid: req.body.parent_uuid,
-            content: content.content,
-          })
+            uuid: id,
+            parent_uuid: parent_uuid,
+            content: content,
+            order: order,
+            category: category
+          }, )
+
+          if(category === 2) {
+            await Promise.all(
+                req.body.plos.map(async plo => {
+                  await LearningOutcomePLO_CLO.create({
+                    uuid: plo,
+                    childUuid: id
+                  })
+                })
+            )
+          }
         })
     );
+
+
 
     res.status(200).json({
       message: messages.MSG_SUCCESS
     });
   } catch(error) {
     res.status(500).json({
-      message: messages.MSG_CANNOT_CREATE + constants.LEARNING_OUTCOME
+      message: messages.MSG_CANNOT_CREATE + constants.LEARNING_OUTCOME + error
     });
   }
 }
@@ -44,11 +62,9 @@ exports.createLearningOutcome = async (req, res) => {
 exports.getAllLearningOutcomes = async (req, res) => {
   try {
     const learningOutcomes = await LearningOutcome.findAll({
-      include: [
-        {
-          model: LearningOutcome,
-        }
-      ]
+      where: {
+        category: req.params.category
+      }
       //order: [[constants.ORDER, constants.ASC]]
     });
     res.status(200).json({
@@ -56,13 +72,14 @@ exports.getAllLearningOutcomes = async (req, res) => {
     });
   } catch(error) {
     res.status(500).json({
-      message: messages.MSG_CANNOT_GET + constants.LEARNING_OUTCOMES
+      message: messages.MSG_CANNOT_GET + constants.LEARNING_OUTCOMES + error
     });
   }
 }
 
 exports.deleteLearningOutcome = async (req, res) => {
   try {
+
     const learningOutcome = await LearningOutcome.findOne({
       where: {
         uuid: req.params.uuid
@@ -74,7 +91,7 @@ exports.deleteLearningOutcome = async (req, res) => {
       });
     }
     //delete all children as well
-    await LearningOutcome.destroy({
+    /*await LearningOutcome.destroy({
       where: {
         [Op.or]: [
           {
@@ -85,13 +102,25 @@ exports.deleteLearningOutcome = async (req, res) => {
           }
         ]
       }
-    });
+    });*/
+
+    await LearningOutcome.destroy({
+      where: {
+        parent_uuid: req.params.uuid
+      }
+    })
+    await LearningOutcome.destroy({
+      where: {
+        uuid: req.params.uuid
+      }
+    })
+
     res.status(200).json({
       message: messages.MSG_SUCCESS
     });
   } catch(error) {
     res.status(500).json({
-      message: messages.MSG_CANNOT_DELETE + constants.LEARNING_OUTCOME
+      message: messages.MSG_CANNOT_DELETE + constants.LEARNING_OUTCOME + error
     });
   }
 }

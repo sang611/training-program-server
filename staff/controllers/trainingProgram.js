@@ -1,5 +1,6 @@
 const TrainingProgram = require('../../models/TrainingProgram')
 const TrainingProgramCourse = require('../../models/TrainingProgramCourse')
+const TrainingProgramLOC = require('../../models/TrainingProgramLearningOutcome')
 const messages = require('../../lib/constants/messages');
 const constants = require('../../lib/constants/constants');
 const uuid = require('uuid/v4');
@@ -9,9 +10,13 @@ const Institution = require("../../models/Institution");
 const connection = require("../../database/connection");
 const Course = require("../../models/Course");
 const readXlsxFile = require("read-excel-file/node");
+const LearningOutcome = require("../../models/LearningOutcome");
 
 exports.createTrainingProgram = async (req, res) => {
+    let transaction;
     try {
+
+        transaction = await connection.sequelize.transaction();
         await TrainingProgram.create({
             uuid: uuid(),
             vn_name: req.body.vn_name,
@@ -26,13 +31,21 @@ exports.createTrainingProgram = async (req, res) => {
             specific_destination: req.body.specific_destination,
             admission_method: req.body.admission_method,
             admission_scale: req.body.admission_scale
-        })
-
+        }, {transaction})
+        await transaction.commit();
         res.status(201).json({
             message: messages.MSG_SUCCESS
         })
     } catch (error) {
-        console.log(error);
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    error: e.toString(),
+                });
+            }
+        }
         res.status(500).json({
             message: messages.MSG_CANNOT_CREATE + constants.TRAINING_PROGRAM
         });
@@ -72,6 +85,9 @@ exports.getTrainingProgram = async (req, res) => {
                 },
                 {
                     model: Course,
+                },
+                {
+                    model: LearningOutcome,
                 }
             ]
         });
@@ -213,6 +229,28 @@ exports.addCourseToTrainingProgram = async (req, res) => {
     }
 }
 
+exports.updateCourseToTrainingProgram = async (req, res) => {
+    try {
+        await TrainingProgramCourse.update(
+            {...req.body},
+            {
+                where: {
+                    trainingProgramUuid: req.params.trainingProgramUuid,
+                    courseUuid: req.params.courseUuid
+                }
+            }
+        )
+        res.status(200).json({
+            message: messages.MSG_SUCCESS
+        });
+    } catch (e) {
+        res.status(500).json({
+            message: "Không thể cập nhật học phần này"
+        });
+    }
+
+}
+
 exports.addCourseToTrainingProgramByFile = async (req, res) => {
     let filePath =
         "/Web/KLTN/training-scheme-backend/uploads/" + req.file.filename;
@@ -288,4 +326,58 @@ exports.addCourseToTrainingProgramByFile = async (req, res) => {
         .catch((err) => {
             res.status(500).json(err);
         });
+}
+
+exports.addLocToTrainingProgram = async (req, res) => {
+    const {locs, trainingUuid} = req.body;
+    let transaction;
+    const listLocs = [];
+    try {
+        /*await Promise.all(
+            locs.map(async (loc) => {
+                const aLoc = await TrainingProgramLOC.findOne({
+                    where: {
+                        learningOutcomeUuid: loc,
+                        trainingProgramUuid: trainingUuid
+                    },
+                });
+                if (aLoc) {
+                    return res.status(409).json({
+                        message: "1 chuẩn đầu ra đã tồn tại trong CTĐT này",
+                    });
+                }
+            })
+        );*/
+        transaction = await connection.sequelize.transaction();
+        await TrainingProgramLOC.destroy({where: {}}, {transaction})
+
+        await Promise.all(
+            locs.map(async (loc) => {
+                const newLoc = {
+                    trainingProgramUuid: trainingUuid,
+                    learningOutcomeUuid: loc,
+                };
+
+                listLocs.push(newLoc);
+            })
+        );
+        await TrainingProgramLOC.bulkCreate(listLocs, { transaction });
+        await transaction.commit();
+        res.status(200).json({
+            message: messages.MSG_SUCCESS,
+        });
+    } catch (e) {
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    message: "Đã có lỗi truy vấn xảy ra",
+                });
+            }
+        }
+        res.status(500).json({
+            message: "Không thể thêm mới chuẩn đầu ra vào CTĐT" + e,
+        });
+    }
 }

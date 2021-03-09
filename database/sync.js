@@ -6,7 +6,10 @@ const Account = require("../models/Account");
 const TrainingProgram = require("../models/TrainingProgram");
 const Course = require("../models/Course");
 const TrainingProgramCourse = require("../models/TrainingProgramCourse");
+const TrainingProgramLearningOutcome = require("../models/TrainingProgramLearningOutcome");
 const LearningOutcome = require("../models/LearningOutcome");
+const LearningOutcomeTitle = require("../models/LearningOutcomeTitle");
+const LearningOutcomePLO_CLO = require("../models/LearningOutcomePLO_CLO");
 
 Employee.belongsTo(Account);
 Account.hasOne(Employee);
@@ -29,8 +32,17 @@ Course.belongsTo(Institution);*/
 TrainingProgram.belongsToMany(Course, { through: TrainingProgramCourse });
 Course.belongsToMany(TrainingProgram, { through: TrainingProgramCourse });
 
-LearningOutcome.hasMany(LearningOutcome,{foreignKey: 'parent_uuid'});
-LearningOutcome.belongsTo(LearningOutcome,{foreignKey: 'parent_uuid'})
+TrainingProgram.belongsToMany(LearningOutcome, { through: TrainingProgramLearningOutcome });
+LearningOutcome.belongsToMany(TrainingProgram, { through: TrainingProgramLearningOutcome });
+
+LearningOutcomeTitle.hasMany(LearningOutcome);
+LearningOutcome.belongsTo(LearningOutcomeTitle);
+
+LearningOutcomeTitle.hasMany(LearningOutcomeTitle,{foreignKey: 'parent_uuid', as: 'children'});
+LearningOutcomeTitle.belongsTo(LearningOutcomeTitle,{foreignKey: 'parent_uuid'});
+
+LearningOutcome.belongsToMany(LearningOutcome,{foreignKey: 'uuid', as: 'children', through: LearningOutcomePLO_CLO});
+
 
 
 module.exports = connection.sequelize.sync({

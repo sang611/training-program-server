@@ -1,7 +1,7 @@
 const Sequelize = require("sequelize");
 const connection = require("../database/connection");
 
-const LegalDocument = connection.sequelize.define("legaldocument", {
+const LegalDocument = connection.sequelize.define("legal_document", {
   uuid: {
     type: Sequelize.UUID,
     primaryKey: true,

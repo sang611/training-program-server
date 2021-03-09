@@ -6,8 +6,10 @@ const paginate = require('../../lib/utils/paginate');
 const constructSearchQuery = require('../../lib/utils/constructSearchQuery');
 const multer = require('multer');
 const uploadImageToStorage = require('../../lib/utils/uploadToFirebase')
+const connection = require("../../database/connection");
 
 exports.createInstitution = async (req, res) => {
+  let transaction;
   try {
     let logoFile = req.file;
     let logoFilePath = "https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg";
@@ -18,7 +20,7 @@ exports.createInstitution = async (req, res) => {
         console.error(error);
       });
     }
-    
+    transaction = await connection.sequelize.transaction();
     await Institution.create({
       uuid: uuid(),
       vn_name: req.body.vn_name,
@@ -28,13 +30,21 @@ exports.createInstitution = async (req, res) => {
       description: req.body.description !== "undefined" ? req.body.description : "",
       logo: logoFilePath,
       parent_uuid: req.body.parent_uuid,
-    })
-  
+    }, {transaction})
+    await transaction.commit();
     res.status(201).json({
       message: messages.MSG_SUCCESS
     })
   } catch(error) {
-    console.log(error);
+    if (transaction) {
+      try {
+        await transaction.rollback();
+      } catch (e) {
+        res.status(500).json({
+          error: e.toString(),
+        });
+      }
+    }
     res.status(500).json({
       message: messages.MSG_CANNOT_CREATE + constants.INSTITUTION
     });

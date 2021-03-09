@@ -15,6 +15,9 @@ const LearningOutcome = connection.sequelize.define("learning_outcome", {
   order: {
     type: Sequelize.INTEGER,
   },
+  category: {
+    type: Sequelize.INTEGER
+  }
 });
 
 
