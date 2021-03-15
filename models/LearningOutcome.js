@@ -7,16 +7,16 @@ const LearningOutcome = connection.sequelize.define("learning_outcome", {
     primaryKey: true,
   },
   content: {
-    type: Sequelize.TEXT,
-  },
-  parent_uuid: {
-    type: Sequelize.UUID,
+    type: Sequelize.STRING,
   },
   order: {
     type: Sequelize.INTEGER,
   },
   category: {
     type: Sequelize.INTEGER
+  },
+  isLink: {
+    type: Sequelize.BOOLEAN
   }
 });
 

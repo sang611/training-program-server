@@ -20,6 +20,12 @@ const TrainingProgramCourse = connection.sequelize.define(
         },
         course_type: {
             type: Sequelize.STRING
+        },
+        documents: {
+            type: Sequelize.TEXT('long')
+        },
+        lecturers: {
+            type: Sequelize.TEXT('long')
         }
     }
 );

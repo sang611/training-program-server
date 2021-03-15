@@ -16,6 +16,7 @@ exports.createCourse = async (req, res) => {
       course_name_en: req.body.en_name,
       course_code: req.body.course_code,
       credits: req.body.credits,
+      institutionUuid: req.body.institution
     })
 
     res.status(201).json({
@@ -42,9 +43,9 @@ exports.getAllCourses = async (req, res) => {
     const totalPages = Math.ceil(total / pageSize);
     const courses = await Course.findAll({
       where: searchQuery,
-      /*include: [
+      include: [
         {model: Institution}
-      ],*/
+      ],
       ...paginate({ page, pageSize }),
     });
     res.status(200).json({
@@ -58,6 +59,36 @@ exports.getAllCourses = async (req, res) => {
     });
   }
 }
+
+exports.getACourse = async (req, res) => {
+  try {
+    let course = await Course.findOne({
+      where: {
+        uuid: req.params.uuid,
+
+      },
+      include: [
+        {
+          model: Institution
+        }
+      ]
+    });
+
+    if (course) {
+      return res.status(200).json({
+        course: course,
+      });
+    } else {
+      return res.status(404).json({
+        message: "Học phần không tồn tại.",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      message: "Đã có lỗi xảy ra" + error,
+    });
+  }
+};
 
 exports.deleteCourse = async (req, res) => {
   try {

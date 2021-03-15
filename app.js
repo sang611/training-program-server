@@ -17,12 +17,15 @@ const courseCodeRoutes = require("./staff/routes/courseCode");
 const courseRoutes = require("./staff/routes/course");
 const legalDocumentRoutes = require("./staff/routes/legalDocument");
 const trainingProgramRouter = require("./staff/routes/trainingProgram");
+const outlineRouter = require("./staff/routes/outline")
 const sync = require("./database/sync")
 
 dotenv.config();
 app.use(morgan("common"));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+/*app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());*/
+app.use(bodyParser.json({limit:1024*1024*500, type:'application/json'}));
+app.use(bodyParser.urlencoded({ extended:true,limit:1024*1024*20,type:'application/x-www-form-urlencoded' }));
 app.use(cookieParser());
 app.use(
   cors({
@@ -43,5 +46,6 @@ app.use("/course-codes", courseCodeRoutes);
 app.use("/courses", courseRoutes);
 app.use("/documents", legalDocumentRoutes);
 app.use("/training-programs", trainingProgramRouter);
+app.use("/outlines", outlineRouter);
 
 module.exports = app;

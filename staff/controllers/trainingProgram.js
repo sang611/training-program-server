@@ -186,8 +186,8 @@ exports.addCourseToTrainingProgram = async (req, res) => {
             })
         );
         transaction = await connection.sequelize.transaction();
-        await Promise.all(
-            courses.map(async (course) => {
+
+            courses.forEach( (course) => {
                 const {
                     course_uuid,
                     theory_time,
@@ -207,11 +207,28 @@ exports.addCourseToTrainingProgram = async (req, res) => {
 
                 listCourses.push(newCourse);
             })
-        );
-        await TrainingProgramCourse.bulkCreate(listCourses, { transaction });
+
+        let newCourses = await TrainingProgramCourse.bulkCreate(listCourses, { transaction });
+        let listNewCourse = [];
+        await Promise.all(
+            newCourses.map(async (newCourse) => {
+                let course = await Course.findOne({
+                    where: {
+                        uuid: newCourse.courseUuid
+                    }
+                }, {transaction})
+
+                listNewCourse.push({
+                    ...course.dataValues,
+                    ...newCourse.dataValues
+                })
+            })
+        )
+
         await transaction.commit();
         res.status(200).json({
             message: messages.MSG_SUCCESS,
+            newCourses: listNewCourse
         });
     } catch (e) {
         if (transaction) {
@@ -219,7 +236,7 @@ exports.addCourseToTrainingProgram = async (req, res) => {
                 await transaction.rollback();
             } catch (e) {
                 res.status(500).json({
-                    error: e.toString(),
+                    message: e.toString(),
                 });
             }
         }
@@ -229,8 +246,35 @@ exports.addCourseToTrainingProgram = async (req, res) => {
     }
 }
 
-exports.updateCourseToTrainingProgram = async (req, res) => {
+exports.getCourseOfTrainingProgram = async (req, res) => {
     try {
+        let courses = await TrainingProgramCourse.findAll(
+            {
+                where: {
+                    trainingProgramUuid: req.params.trainingProgramUuid,
+                },
+                include: [
+                    {
+                        model: Course
+                    }
+                ]
+            }
+        )
+
+        return res.status(200).json({
+            trainingProgramCourses: courses,
+        });
+    } catch (e) {
+        res.status(500).json({
+            message: "Đã có lỗi truy vấn xảy ra" + e,
+        });
+    }
+}
+
+exports.updateCourseToTrainingProgram = async (req, res) => {
+    let transaction;
+    try {
+        transaction = await connection.sequelize.transaction();
         await TrainingProgramCourse.update(
             {...req.body},
             {
@@ -238,17 +282,95 @@ exports.updateCourseToTrainingProgram = async (req, res) => {
                     trainingProgramUuid: req.params.trainingProgramUuid,
                     courseUuid: req.params.courseUuid
                 }
-            }
+            }, {transaction}
         )
         res.status(200).json({
             message: messages.MSG_SUCCESS
         });
     } catch (e) {
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    message: "Đã có lỗi truy vấn xảy ra",
+                });
+            }
+        }
         res.status(500).json({
             message: "Không thể cập nhật học phần này"
         });
     }
+}
 
+exports.updateTrainingSequence = async (req, res) => {
+    const {trainingProgramUuid, coursesOfSemester, semester} = req.body;
+    let transaction;
+    try {
+        transaction = await connection.sequelize.transaction();
+        await Promise.all(
+            coursesOfSemester.map(async courseUuid => {
+                TrainingProgramCourse.update(
+                    {semester},
+                    {
+                        where: {
+                            trainingProgramUuid,
+                            courseUuid
+                        }
+                    }
+                )
+            }, {transaction})
+        )
+        await transaction.commit();
+        res.status(200).json({
+            message: messages.MSG_SUCCESS
+        });
+    } catch (e) {
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    message: "Đã có lỗi truy vấn xảy ra",
+                });
+            }
+        }
+        res.status(500).json({
+            message: "Không thể cập nhật học phần này"
+        });
+    }
+}
+
+exports.deleteCourseToTrainingProgram = async (req, res) => {
+    let transaction;
+    try {
+        transaction = await connection.sequelize.transaction();
+        await TrainingProgramCourse.destroy(
+            {
+                where: {
+                    trainingProgramUuid: req.params.trainingProgramUuid,
+                    courseUuid: req.params.courseUuid
+                }
+            }, {transaction}
+        )
+        await transaction.commit();
+        res.status(200).json({
+            message: "Đã xóa học phần khỏi khung đào tạo",
+        });
+    } catch (e) {
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    message: "Đã có lỗi truy vấn xảy ra",
+                });
+            }
+        }
+        res.status(500).json({
+            message: "Đã có lỗi xảy ra",
+        });
+    }
 }
 
 exports.addCourseToTrainingProgramByFile = async (req, res) => {

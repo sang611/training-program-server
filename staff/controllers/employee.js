@@ -9,6 +9,7 @@ const constants = require("../../lib/constants/constants");
 const paginate = require("../../lib/utils/paginate");
 const constructSearchQuery = require("../../lib/utils/constructSearchQuery");
 const readXlsxFile = require("read-excel-file/node");
+const Institution = require("../../models/Institution");
 
 exports.createEmployee = async (req, res) => {
   const hashPassword = await bcrypt.hash(req.body.password, saltRounds);
@@ -179,6 +180,7 @@ exports.getAllEmployees = async (req, res) => {
           model: Account,
           where: accountSearchQuery,  
         },
+
       ],
     });
     const page = req.query.page || constants.DEFAULT_PAGE_VALUE;
@@ -192,6 +194,9 @@ exports.getAllEmployees = async (req, res) => {
           attributes: [constants.UUID, constants.USERNAME, constants.ROLE],
           where: accountSearchQuery,
         },
+        {
+          model: Institution
+        }
       ],
       ...paginate({ page, pageSize }),
     });
@@ -218,6 +223,9 @@ exports.getEmployee = async (req, res) => {
           model: Account,
           attributes: [constants.UUID, constants.USERNAME, constants.ROLE],
         },
+        {
+          model: Institution
+        }
       ],
     });
     if (employee) {
