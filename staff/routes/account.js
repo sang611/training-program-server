@@ -11,4 +11,6 @@ router.post("/checkAccessToken", checkAccessToken, (req, res) => {
     )
 })
 
+router.get("/:accountUuid/:role", accountController.getAUser);
+
 module.exports = router;

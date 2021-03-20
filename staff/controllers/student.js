@@ -1,5 +1,6 @@
 const Student = require("../../models/Student");
 const Account = require("../../models/Account");
+const StudentCourse = require("../../models/StudentCourse")
 const bcrypt = require("bcrypt");
 const saltRounds = require("../../lib/constants/constants").SALT_ROUND;
 const connection = require("../../database/connection");
@@ -49,7 +50,8 @@ exports.createStudent = async (req, res) => {
                 class: req.body.class,
                 note: req.body.note,
                 accountUuid: accountUuid,
-                institutionUuid: "8df36f06-46b6-4d06-832d-f73f6f4a46e1",
+                institutionUuid: req.body.institution
+                ,
             },
             {transaction}
         );
@@ -207,3 +209,80 @@ exports.getAllStudents = async (req, res) => {
         });
     }
 };
+
+exports.addCourseToPlan = async (req, res) => {
+    const {studentUuid, courseUuid, semester, working, completed, improved, repeated, available} = req.body;
+    let transaction;
+    try {
+        const student_course = await StudentCourse.findOne({
+            where: {
+                studentUuid: studentUuid,
+                courseUuid: courseUuid
+            }
+        })
+        transaction = await connection.sequelize.transaction();
+        const studentCourse = {
+            studentUuid: studentUuid,
+            courseUuid: courseUuid,
+            semester: semester,
+            working: working ? working : null,
+            improved: improved ? improved : null,
+            completed: completed ? completed : null,
+            repeated: repeated ? repeated : null
+        }
+
+        if(available) {
+            await StudentCourse.destroy(
+                {
+                    where: {
+                        studentUuid: studentUuid,
+                        courseUuid: courseUuid
+                    }
+                }
+
+                , {transaction})
+        }
+
+        if(student_course) {
+            await StudentCourse.update(
+                    studentCourse,
+                    {
+                        where: {
+                            studentUuid: studentUuid,
+                            courseUuid: courseUuid
+                        }
+                    }
+
+            , {transaction})
+        } else {
+            await StudentCourse.create(
+                studentCourse
+            , {transaction})
+        }
+
+        await transaction.commit();
+        res.status(200).json({
+            message: "Thành công",
+        });
+
+    } catch (e) {
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    error: e.toString(),
+                });
+            }
+        }
+        res.status(500).json({
+            message: "Đã có lỗi xảy ra" + e,
+        });
+    }
+
+}
+
+exports.joinTrainingProgram = async (req, res) => {
+    const {studentUuid, trainingProgramUuid} = req.body;
+
+}

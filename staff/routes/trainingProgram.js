@@ -10,9 +10,9 @@ router.put("/:uuid", trainingProgramController.updateTrainingProgram);
 router.post("/courses", trainingProgramController.addCourseToTrainingProgram);
 
 router.get("/:trainingProgramUuid/courses", trainingProgramController.getCourseOfTrainingProgram);
-router.put("/courses/:trainingProgramUuid/:courseUuid", trainingProgramController.updateCourseToTrainingProgram);
-router.put("/courses/:trainingProgramUuid/:courseUuid/planning", trainingProgramController.updateTrainingSequence);
-router.delete("/courses/:trainingProgramUuid/:courseUuid", trainingProgramController.deleteCourseToTrainingProgram);
+router.put("/:trainingProgramUuid/courses/:courseUuid", trainingProgramController.updateCourseToTrainingProgram);
+router.put("/courses/:trainingProgramUuid/planning", trainingProgramController.updateTrainingSequence);
+router.delete("/:trainingProgramUuid/courses/:courseUuid", trainingProgramController.deleteCourseToTrainingProgram);
 
 router.post("/courses/file", multer.single('coursesFile'), trainingProgramController.addCourseToTrainingProgramByFile);
 router.post("/learning-outcomes", trainingProgramController.addLocToTrainingProgram);

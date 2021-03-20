@@ -298,7 +298,7 @@ exports.updateCourseToTrainingProgram = async (req, res) => {
             }
         }
         res.status(500).json({
-            message: "Không thể cập nhật học phần này"
+            message: "Không thể cập nhật học phần này" + e
         });
     }
 }
@@ -336,7 +336,7 @@ exports.updateTrainingSequence = async (req, res) => {
             }
         }
         res.status(500).json({
-            message: "Không thể cập nhật học phần này"
+            message: "Không thể cập nhật học phần này" + e
         });
     }
 }

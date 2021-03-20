@@ -10,13 +10,27 @@ const connection = require("../../database/connection");
 
 exports.createCourse = async (req, res) => {
   try {
+
+    const course = await Course.findOne({
+      where: {
+        course_code: req.body.course_code,
+      },
+    });
+
+    if (course) {
+      return res.status(409).json({
+        message: "Học phần đã tồn tại trong hệ thống",
+      });
+    }
+
     await Course.create({
       uuid: uuid(),
-      course_name_vi: req.body.vn_name,
+      /*course_name_vi: req.body.vn_name,
       course_name_en: req.body.en_name,
       course_code: req.body.course_code,
       credits: req.body.credits,
-      institutionUuid: req.body.institution
+      institutionUuid: req.body.institutionUuid*/
+    ...req.body
     })
 
     res.status(201).json({
@@ -25,7 +39,7 @@ exports.createCourse = async (req, res) => {
   } catch(error) {
     console.log(error);
     res.status(500).json({
-      message: "Không thể tạo mới học phần :("
+      message: "Không thể tạo mới học phần. Đã có lỗi xảy ra"
     });
   }
 }

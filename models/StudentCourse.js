@@ -3,22 +3,30 @@ const connection = require("../database/connection");
 const Student = require("./Student");
 const Course = require("./Course");
 
-const StudentCourse = connection.sequelize.define("studentCourse", {
-  result: {
-    type: Sequelize.FLOAT,
+const StudentCourse = connection.sequelize.define("student_course", {
+  uuid: {
+    type: Sequelize.BIGINT,
+    primaryKey: true,
+    autoIncrement: true
   },
-  planned: {
-    type: Sequelize.TINYINT,
+  completed: {
+    type: Sequelize.TINYINT
   },
-  approved: {
-    type: Sequelize.TINYINT,
+  working: {
+    type: Sequelize.TINYINT
+  },
+  repeated: {
+    type: Sequelize.TINYINT
+  },
+  improved: {
+    type: Sequelize.TINYINT
   },
   semester: {
-    type: Sequelize.TINYINT,
+    type: Sequelize.INTEGER
   },
-  year: {
-    type: Sequelize.TINYINT,
-  },
+  isAccumulative: {
+    type: Sequelize.INTEGER
+  }
 });
 
 module.exports = StudentCourse;

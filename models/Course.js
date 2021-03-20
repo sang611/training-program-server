@@ -31,8 +31,8 @@ const Course = connection.sequelize.define("course", {
   document_url: {
     type: Sequelize.TEXT,
   },
-  required_course_uuid: {
-    type: Sequelize.UUID,
+  required_course: {
+    type: Sequelize.TEXT,
   },
 });
 

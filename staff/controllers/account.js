@@ -4,13 +4,16 @@ const saltRounds = require('../../lib/constants/constants').SALT_ROUND;
 const messages = require('../../lib/constants/messages');
 const constants = require('../../lib/constants/constants');
 const jwt = require('jsonwebtoken');
+const Student = require("../../models/Student");
+const Employee = require("../../models/Employee");
+const Course = require("../../models/Course");
 
 exports.login = async (req, res) => {
     try {
         const account = await Account.findOne({
             where: {
                 username: req.body.username
-            }
+            },
         });
         if (account) {
             const match = await bcrypt.compare(req.body.password, account.password);
@@ -49,7 +52,7 @@ exports.login = async (req, res) => {
         }
     } catch (error) {
         return res.status(401).json({
-            message: messages.MSG_FAIL_LOGIN
+            message: messages.MSG_FAIL_LOGIN + error
         });
     }
 }
@@ -100,5 +103,39 @@ exports.changePassword = async (req, res) => {
             message: messages.MSG_FAIL_CHANGE_PASS
         });
     }
+}
+
+exports.getAUser = async (req, res) => {
+    const {accountUuid, role} = req.params;
+    let user;
+
+    try {
+        if(role == 3) {
+             user = await Student.findOne({
+                where: {
+                    accountUuid: accountUuid
+                },
+                 include: [
+                     {
+                         model: Course
+                     }
+                 ]
+            })
+        }
+        if(role == 1 || role == 2) {
+            user = await Employee.findOne({
+                accountUuid: accountUuid
+            })
+        }
+        return res.status(200).json({
+            user: user
+        })
+    } catch (e) {
+        return res.status(500).json({
+            message: "Đã có lỗi xảy ra" + e
+        })
+    }
+
+
 }
 

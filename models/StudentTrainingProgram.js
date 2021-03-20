@@ -4,8 +4,13 @@ const Student = require("./Student");
 const Course = require("./Course");
 
 const StudentTrainingProgram = connection.sequelize.define(
-  "studentTrainingProgram",
+  "student_training_program",
   {
+      uuid: {
+          type: Sequelize.BIGINT,
+          primaryKey: true,
+          autoIncrement: true
+      },
     startDate: {
       type: Sequelize.DATE,
     },

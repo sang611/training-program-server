@@ -12,6 +12,8 @@ const LearningOutcomeTitle = require("../models/LearningOutcomeTitle");
 const LearningOutcomePLO_CLO = require("../models/LearningOutcomePLO_CLO");
 const Outline = require("../models/Outline");
 const OutlineLearningOutcome = require("../models/OutlineLearningOutcome");
+const StudentCourse = require("../models/StudentCourse");
+const StudentTrainingProgram = require("../models/StudentTrainingProgram");
 
 Employee.belongsTo(Account);
 Account.hasOne(Employee);
@@ -25,6 +27,9 @@ Employee.belongsTo(Institution);
 Institution.hasMany(Student);
 Student.belongsTo(Institution);
 
+Student.belongsToMany(Course, {through: StudentCourse});
+Course.belongsToMany(Student, {through: StudentCourse});
+
 Institution.hasMany(TrainingProgram);
 TrainingProgram.belongsTo(Institution);
 
@@ -34,8 +39,11 @@ Course.belongsTo(Institution);
 TrainingProgram.belongsToMany(Course, { through: TrainingProgramCourse });
 Course.belongsToMany(TrainingProgram, { through: TrainingProgramCourse });
 
-TrainingProgram.belongsToMany(LearningOutcome, { through: TrainingProgramLearningOutcome });
-LearningOutcome.belongsToMany(TrainingProgram, { through: TrainingProgramLearningOutcome });
+TrainingProgram.belongsToMany(Student, {through: StudentTrainingProgram});
+Student.belongsToMany(TrainingProgram, {through: StudentTrainingProgram})
+
+TrainingProgram.belongsToMany(LearningOutcome, { through: TrainingProgramLearningOutcome, uniqueKey: 'trainingUuid_LocUuid' });
+LearningOutcome.belongsToMany(TrainingProgram, { through: TrainingProgramLearningOutcome, uniqueKey: 'trainingUuid_LocUuid' });
 
 LearningOutcomeTitle.hasMany(LearningOutcome);
 LearningOutcome.belongsTo(LearningOutcomeTitle);

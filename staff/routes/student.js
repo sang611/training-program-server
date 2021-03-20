@@ -10,5 +10,6 @@ router.get('/', checkAccessToken, studentController.getAllStudents);
 // router.get('/:uuid', employeeController.getEmployee);
 // router.delete('/:uuid', employeeController.deleteEmployee);
 // router.put('/:uuid', employeeController.updateEmployee);
+router.post('/course', studentController.addCourseToPlan);
 
 module.exports = router;
