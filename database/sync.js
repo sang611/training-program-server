@@ -57,8 +57,8 @@ LearningOutcome.belongsToMany(LearningOutcome,{ as: 'clos', through: LearningOut
 Course.hasMany(Outline);
 Outline.belongsTo(Course);
 
-Outline.belongsToMany(LearningOutcome, { through: OutlineLearningOutcome });
-LearningOutcome.belongsToMany(Outline, { through: OutlineLearningOutcome });
+Outline.belongsToMany(LearningOutcome, { through: {model: OutlineLearningOutcome, unique: false} });
+LearningOutcome.belongsToMany(Outline, { through: {model: OutlineLearningOutcome, unique: false} });
 
 
 

@@ -14,7 +14,7 @@
     },
     "dialectOptions": {
       "options": {
-        "requestTimeout": 3000
+        "requestTimeout": 300000
       }
     }
   }

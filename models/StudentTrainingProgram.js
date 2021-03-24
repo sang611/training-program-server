@@ -6,11 +6,7 @@ const Course = require("./Course");
 const StudentTrainingProgram = connection.sequelize.define(
   "student_training_program",
   {
-      uuid: {
-          type: Sequelize.BIGINT,
-          primaryKey: true,
-          autoIncrement: true
-      },
+
     startDate: {
       type: Sequelize.DATE,
     },

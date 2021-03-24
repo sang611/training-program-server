@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const Student = require("../../models/Student");
 const Employee = require("../../models/Employee");
 const Course = require("../../models/Course");
+const Institution = require("../../models/Institution");
 
 exports.login = async (req, res) => {
     try {
@@ -107,6 +108,7 @@ exports.changePassword = async (req, res) => {
 
 exports.getAUser = async (req, res) => {
     const {accountUuid, role} = req.params;
+    console.log(accountUuid, role)
     let user;
 
     try {
@@ -118,18 +120,37 @@ exports.getAUser = async (req, res) => {
                  include: [
                      {
                          model: Course
+                     },
+                     {
+                         model: Institution
                      }
                  ]
             })
         }
         if(role == 1 || role == 2) {
-            user = await Employee.findOne({
-                accountUuid: accountUuid
+            user = await Employee.findOne(
+                {
+                    where: {
+                        accountUuid: accountUuid
+                    },
+                    include: [
+                        {
+                            model: Institution
+                        }
+                    ]
+                }
+            )
+        }
+        if(user) {
+            return res.status(200).json({
+                user: user
             })
         }
-        return res.status(200).json({
-            user: user
-        })
+       else {
+            return res.status(404).json({
+                message: "Không tìm thấy người dùng"
+            })
+        }
     } catch (e) {
         return res.status(500).json({
             message: "Đã có lỗi xảy ra" + e

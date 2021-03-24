@@ -15,13 +15,14 @@ const learningOutcomeRoutes = require("./staff/routes/learningOutcome");
 const learningOutcomeTitleRoutes = require("./staff/routes/learningOutcomeTitle");
 const courseCodeRoutes = require("./staff/routes/courseCode");
 const courseRoutes = require("./staff/routes/course");
-const legalDocumentRoutes = require("./staff/routes/legalDocument");
+const documentRoutes = require("./staff/routes/document");
 const trainingProgramRouter = require("./staff/routes/trainingProgram");
 const outlineRouter = require("./staff/routes/outline")
 const sync = require("./database/sync")
 
 dotenv.config();
 app.use(morgan("common"));
+app.use(express.static(__dirname + '/public'));
 /*app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());*/
 app.use(bodyParser.json({limit:1024*1024*500, type:'application/json'}));
@@ -44,7 +45,7 @@ app.use("/learning-outcomes", learningOutcomeRoutes);
 app.use("/learning-outcome-titles", learningOutcomeTitleRoutes);
 app.use("/course-codes", courseCodeRoutes);
 app.use("/courses", courseRoutes);
-app.use("/documents", legalDocumentRoutes);
+app.use("/documents", documentRoutes);
 app.use("/training-programs", trainingProgramRouter);
 app.use("/outlines", outlineRouter);
 

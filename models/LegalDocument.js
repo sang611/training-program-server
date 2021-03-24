@@ -1,7 +1,7 @@
 const Sequelize = require("sequelize");
 const connection = require("../database/connection");
 
-const LegalDocument = connection.sequelize.define("legal_document", {
+const LegalDocument = connection.sequelize.define("document", {
   uuid: {
     type: Sequelize.UUID,
     primaryKey: true,
@@ -9,14 +9,8 @@ const LegalDocument = connection.sequelize.define("legal_document", {
   name: {
     type: Sequelize.TEXT,
   },
-  created_date: {
-    type: Sequelize.DATE,
-  },
-  modified_date: {
-    type: Sequelize.DATE,
-  },
   document_url: {
-    type: Sequelize.TEXT,
+    type: Sequelize.TEXT('long'),
   },
   category: {
     type: Sequelize.TEXT,

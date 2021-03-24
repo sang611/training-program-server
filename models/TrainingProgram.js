@@ -28,8 +28,8 @@ const TrainingProgram = connection.sequelize.define("training_program", {
   graduation_diploma_en: {
     type: Sequelize.STRING,
   },
-  duration: {
-    type: Sequelize.INTEGER,
+  training_duration: {
+    type: Sequelize.FLOAT,
   },
   admission_method: {
     type: Sequelize.TEXT,

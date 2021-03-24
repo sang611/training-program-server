@@ -1,3 +1,4 @@
+/*
 const Sequelize = require("sequelize");
 const connection = require("../database/connection");
 
@@ -24,3 +25,4 @@ const LegalDocument = connection.sequelize.define("legaldocument", {
 });
 
 module.exports = LegalDocument;
+*/

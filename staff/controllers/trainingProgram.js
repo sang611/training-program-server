@@ -11,6 +11,8 @@ const connection = require("../../database/connection");
 const Course = require("../../models/Course");
 const readXlsxFile = require("read-excel-file/node");
 const LearningOutcome = require("../../models/LearningOutcome");
+const LearningOutcomePLO_CLO = require("../../models/LearningOutcomePLO_CLO");
+const Outline = require("../../models/Outline");
 
 exports.createTrainingProgram = async (req, res) => {
     let transaction;
@@ -23,7 +25,7 @@ exports.createTrainingProgram = async (req, res) => {
             en_name: req.body.en_name,
             training_program_code: req.body.training_program_code,
             graduation_title: req.body.graduation_title,
-            duration: req.body.training_duration,
+            training_duration: req.body.training_duration,
             graduation_diploma_vi: req.body.graduation_diploma_vi,
             graduation_diploma_en: req.body.graduation_diploma_en,
             institutionUuid: req.body.institution,
@@ -61,6 +63,30 @@ exports.getAllTrainingProgram = async (req, res) => {
                 {
                     model: Institution,
                 },
+                {
+                    model: Course,
+                },
+                {
+                    model: LearningOutcome,
+                    include: [
+                        {
+                            model: LearningOutcome,
+                            as: 'clos',
+                            include: [
+                                {
+                                    model: Outline,
+                                    include: [
+                                        {
+                                            model: Course
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+
+                    ]
+                },
+
             ],
         });
         res.status(200).json({
@@ -471,7 +497,9 @@ exports.addLocToTrainingProgram = async (req, res) => {
             })
         );*/
         transaction = await connection.sequelize.transaction();
-        await TrainingProgramLOC.destroy({where: {}}, {transaction})
+        await TrainingProgramLOC.destroy({where: {
+            trainingProgramUuid: trainingUuid
+            }}, {transaction})
 
         await Promise.all(
             locs.map(async (loc) => {

@@ -11,8 +11,11 @@ const Student = connection.sequelize.define("student", {
     fullname: {
         type: Sequelize.TEXT,
     },
-    birth_date: {
-        type: Sequelize.DATE,
+    gender: {
+        type: Sequelize.TINYINT
+    },
+    birthday: {
+        type: Sequelize.DATEONLY,
     },
     student_code: {
         type: Sequelize.TEXT,
@@ -22,6 +25,9 @@ const Student = connection.sequelize.define("student", {
     },
     vnu_mail: {
         type: Sequelize.TEXT,
+    },
+    phone_number: {
+        type: Sequelize.STRING(15),
     },
     class: {
         type: Sequelize.TEXT,

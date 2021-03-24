@@ -10,6 +10,7 @@ const constants = require("../../lib/constants/constants");
 const paginate = require("../../lib/utils/paginate");
 const constructSearchQuery = require("../../lib/utils/constructSearchQuery");
 const readXlsxFile = require("read-excel-file/node");
+const Institution = require("../../models/Institution");
 
 exports.createStudent = async (req, res) => {
     const hashPassword = await bcrypt.hash(req.body.password, saltRounds);
@@ -42,16 +43,18 @@ exports.createStudent = async (req, res) => {
             {
                 uuid: uuid(),
                 fullname: req.body.full_name,
-                birth_date: req.body.birth_date,
+                gender: req.body.gender,
+                birthday: req.body.birth_date,
                 student_code: req.body.student_code,
                 class: req.body.class,
                 email: req.body.email,
                 vnu_mail: req.body.vnu_mail,
+                phone_number: req.body.phone_number,
                 class: req.body.class,
                 note: req.body.note,
                 accountUuid: accountUuid,
                 institutionUuid: req.body.institution
-                ,
+
             },
             {transaction}
         );
@@ -182,6 +185,7 @@ exports.getAllStudents = async (req, res) => {
                     model: Account,
                     where: accountSearchQuery,
                 },
+
             ],
         });
         const page = req.query.page || constants.DEFAULT_PAGE_VALUE;
@@ -195,6 +199,9 @@ exports.getAllStudents = async (req, res) => {
                     attributes: [constants.UUID, constants.USERNAME, constants.ROLE],
                     where: accountSearchQuery,
                 },
+                {
+                    model: Institution
+                }
             ],
             ...paginate({ page, pageSize }),
         });
@@ -206,6 +213,38 @@ exports.getAllStudents = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             message: messages.MSG_CANNOT_GET + constants.STUDENTS,
+        });
+    }
+};
+
+exports.getAStudent = async (req, res) => {
+    try {
+        const student = await Student.findOne({
+            where: {
+                uuid: req.params.uuid,
+            },
+            include: [
+                {
+                    model: Account,
+                    attributes: [constants.UUID, constants.USERNAME, constants.ROLE],
+                },
+                {
+                    model: Institution
+                }
+            ],
+        });
+        if (student) {
+            return res.status(200).json({
+                student: student,
+            });
+        } else {
+            return res.status(404).json({
+                message: constants.STUDENT + messages.MSG_NOT_FOUND,
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            message: messages.MSG_CANNOT_GET + constants.STUDENT,
         });
     }
 };

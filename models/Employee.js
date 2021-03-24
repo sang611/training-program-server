@@ -14,7 +14,7 @@ const Employee = connection.sequelize.define(
             type: Sequelize.STRING,
         },
         birthday: {
-            type: Sequelize.STRING
+            type: Sequelize.DATEONLY
         },
         gender: {
             type: Sequelize.TINYINT

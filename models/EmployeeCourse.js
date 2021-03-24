@@ -4,11 +4,7 @@ const Employee = require("./Employee");
 const Course = require("./Course");
 
 const EmployeeCourse = connection.sequelize.define("employeeCourse", {
-  uuid: {
-    type: Sequelize.BIGINT,
-    primaryKey: true,
-    autoIncrement: true
-  },
+
   role: {
     type: Sequelize.STRING(50),
   },
