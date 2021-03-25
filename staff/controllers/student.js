@@ -11,6 +11,7 @@ const paginate = require("../../lib/utils/paginate");
 const constructSearchQuery = require("../../lib/utils/constructSearchQuery");
 const readXlsxFile = require("read-excel-file/node");
 const Institution = require("../../models/Institution");
+const StudentTrainingProgram = require("../../models/StudentTrainingProgram");
 
 exports.createStudent = async (req, res) => {
     const hashPassword = await bcrypt.hash(req.body.password, saltRounds);
@@ -318,10 +319,79 @@ exports.addCourseToPlan = async (req, res) => {
             message: "Đã có lỗi xảy ra" + e,
         });
     }
-
 }
 
 exports.joinTrainingProgram = async (req, res) => {
     const {studentUuid, trainingProgramUuid} = req.body;
+    let transaction;
+    try {
+        const studentTraining = await StudentTrainingProgram.findOne({
+            studentUuid,
+            trainingProgramUuid
+        })
 
+        if(studentTraining) {
+            res.status(409).json({
+                message: "Sinh viên đã theo chương trình đào tạo này"
+            })
+        }
+
+        transaction = await connection.sequelize.transaction();
+        await StudentTrainingProgram.create({
+            studentUuid,
+            trainingProgramUuid
+        }, {transaction})
+
+        await transaction.commit();
+        res.status(201).json({
+            message: "Sinh viên đã theo chương trình đào tạo này"
+        })
+
+    } catch (e) {
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    error: e.toString(),
+                });
+            }
+        }
+        res.status(500).json({
+            message: "Đã có lỗi xảy ra" + e,
+        });
+    }
+
+}
+
+exports.getOutTrainingProgram = async (req, res) => {
+    const {studentUuid, trainingProgramUuid} = req.body;
+    let transaction;
+    try {
+
+        transaction = await connection.sequelize.transaction();
+        await StudentTrainingProgram.destroy({
+            studentUuid,
+            trainingProgramUuid
+        }, {transaction})
+
+        await transaction.commit();
+        res.status(200).json({
+            message: messages.MSG_SUCCESS
+        })
+
+    } catch (e) {
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    error: e.toString(),
+                });
+            }
+        }
+        res.status(500).json({
+            message: "Đã có lỗi xảy ra" + e,
+        });
+    }
 }

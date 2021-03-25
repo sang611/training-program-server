@@ -8,6 +8,7 @@ const Student = require("../../models/Student");
 const Employee = require("../../models/Employee");
 const Course = require("../../models/Course");
 const Institution = require("../../models/Institution");
+const TrainingProgram = require("../../models/TrainingProgram");
 
 exports.login = async (req, res) => {
     try {
@@ -15,6 +16,14 @@ exports.login = async (req, res) => {
             where: {
                 username: req.body.username
             },
+            include: [
+                {
+                    model: Student,
+                },
+                {
+                    model: Employee
+                }
+            ]
         });
         if (account) {
             const match = await bcrypt.compare(req.body.password, account.password);
@@ -22,7 +31,9 @@ exports.login = async (req, res) => {
                 const token = jwt.sign({
                         uuid: account.uuid,
                         username: account.username,
-                        role: account.role
+                        role: account.role,
+                        student: account.student,
+                        employee: account.employee
                     },
                     process.env.JWT_KEY,
                     {

@@ -178,7 +178,7 @@ exports.getAllEmployees = async (req, res) => {
       include: [
         {
           model: Account,
-          where: accountSearchQuery,  
+          where: accountSearchQuery,
         },
 
       ],
@@ -309,7 +309,7 @@ exports.updateEmployee = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
-      message: messages.MSG_CANNOT_UPDATE + constants.INSTITUTION,
+      message: messages.MSG_CANNOT_UPDATE + constants.EMPLOYEE,
     });
   }
 };
