@@ -32,8 +32,6 @@ exports.login = async (req, res) => {
                         uuid: account.uuid,
                         username: account.username,
                         role: account.role,
-                        student: account.student,
-                        employee: account.employee
                     },
                     process.env.JWT_KEY,
                     {
@@ -134,6 +132,9 @@ exports.getAUser = async (req, res) => {
                      },
                      {
                          model: Institution
+                     },
+                     {
+                         model: TrainingProgram
                      }
                  ]
             })

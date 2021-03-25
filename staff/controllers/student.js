@@ -139,9 +139,9 @@ exports.createStudentsByFile = async (req, res) => {
 
                 transaction = await connection.sequelize.transaction();
 
-                await Account.bulkCreate(listAccounts, { transaction });
+                await Account.bulkCreate(listAccounts, {transaction});
 
-                await Student.bulkCreate(listStudents, { transaction });
+                await Student.bulkCreate(listStudents, {transaction});
                 await transaction.commit();
                 res.status(200).json({
                     message: messages.MSG_SUCCESS,
@@ -204,7 +204,7 @@ exports.getAllStudents = async (req, res) => {
                     model: Institution
                 }
             ],
-            ...paginate({ page, pageSize }),
+            ...paginate({page, pageSize}),
         });
         res.status(200).json({
             accounts: students,
@@ -271,7 +271,7 @@ exports.addCourseToPlan = async (req, res) => {
             repeated: repeated ? repeated : null
         }
 
-        if(available) {
+        if (available) {
             await StudentCourse.destroy(
                 {
                     where: {
@@ -283,21 +283,21 @@ exports.addCourseToPlan = async (req, res) => {
                 , {transaction})
         }
 
-        if(student_course) {
+        if (student_course) {
             await StudentCourse.update(
-                    studentCourse,
-                    {
-                        where: {
-                            studentUuid: studentUuid,
-                            courseUuid: courseUuid
-                        }
+                studentCourse,
+                {
+                    where: {
+                        studentUuid: studentUuid,
+                        courseUuid: courseUuid
                     }
+                }
 
-            , {transaction})
+                , {transaction})
         } else {
             await StudentCourse.create(
                 studentCourse
-            , {transaction})
+                , {transaction})
         }
 
         await transaction.commit();
@@ -330,7 +330,7 @@ exports.joinTrainingProgram = async (req, res) => {
             trainingProgramUuid
         })
 
-        if(studentTraining) {
+        if (studentTraining) {
             res.status(409).json({
                 message: "Sinh viên đã theo chương trình đào tạo này"
             })
@@ -370,10 +370,14 @@ exports.getOutTrainingProgram = async (req, res) => {
     try {
 
         transaction = await connection.sequelize.transaction();
-        await StudentTrainingProgram.destroy({
-            studentUuid,
-            trainingProgramUuid
-        }, {transaction})
+        await StudentTrainingProgram.destroy(
+            {
+                where: {
+                    studentUuid,
+                    trainingProgramUuid
+                }
+            }
+            , {transaction})
 
         await transaction.commit();
         res.status(200).json({
