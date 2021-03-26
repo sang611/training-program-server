@@ -160,3 +160,61 @@ exports.getAUser = async (req, res) => {
 
 }
 
+exports.updateAccount = async (req, res) => {
+    try {
+        const account = await Account.findOne({
+            where: {
+                uuid: req.params.uuid
+            }
+        });
+        if (account) {
+            newRole = req.params.role;
+            if (newRole < 1 || newRole > 4) {
+                return res.status(409).json({
+                    message: messages.MSG_CANNOT_UPDATE
+                });
+            }
+            else {
+                await Account.update(
+                    {role: req.params.role},
+                    {
+                        where: {
+                            uuid: req.params.uuid
+                        }
+                    }
+                )
+                return res.status(200).json({
+                    message: messages.MSG_SUCCESS
+                });
+            }
+        }
+        else {
+            return res.status(404).json({
+                message: "Không tìm thấy người dùng"
+            })
+        }
+    } catch (error) {
+        return res.status(409).json({
+            message: messages.MSG_CANNOT_UPDATE
+        });
+    }
+}
+
+exports.deleteAccount = async (req, res) => {
+    try {
+        const account = await Account.findOne({
+            where: {
+                uuid: req.params.uuid
+            }
+        });
+        await Account.destroy({
+            where: {
+                uuid: req.params.uuid
+            }
+        })
+    } catch (error) {
+        return res.status(409).json({
+            message: messages.MSG_CANNOT_DELETE
+        });
+    }
+}
