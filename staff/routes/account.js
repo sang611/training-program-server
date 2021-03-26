@@ -12,5 +12,7 @@ router.post("/checkAccessToken", checkAccessToken, (req, res) => {
 })
 
 router.get("/:accountUuid/:role", accountController.getAUser);
+router.put("/changeRole", accountController.updateAccount);
+router.delete("/account", accountController.deleteAccount);
 
 module.exports = router;
