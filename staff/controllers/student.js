@@ -399,3 +399,74 @@ exports.getOutTrainingProgram = async (req, res) => {
         });
     }
 }
+
+exports.updateStudent = async (req, res) => {
+    try {
+        const student = await Student.findOne({
+            where: {
+                uuid: req.params.uuid,
+            },
+        });
+        if (!student) {
+            return res.status(404).json({
+                message: messages.MSG_NOT_FOUND,
+            });
+        }
+        await Student.update(
+            { ...req.body },
+            {
+                where: {
+                    uuid: req.params.uuid,
+                },
+            }
+        );
+        res.status(200).json({
+            message: messages.MSG_SUCCESS,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: messages.MSG_CANNOT_UPDATE + constants.STUDENT,
+        });
+    }
+};
+
+exports.deleteStudent = async (req, res) => {
+    let transaction;
+    try {
+        transaction = await connection.sequelize.transaction();
+        const student = await Student.findOne({
+            where: {
+                uuid: req.params.uuid,
+            },
+        });
+        if (student) {
+
+            await Student.destroy({
+                where: {
+                    uuid: req.params.uuid,
+                },
+                transaction,
+            });
+            await Account.destroy({
+                where: {
+                    uuid: student.accountUuid,
+                },
+                transaction,
+            });
+            await transaction.commit();
+
+            return res.status(200).json({
+                message: messages.MSG_SUCCESS,
+            });
+        } else {
+            return res.status(404).json({
+                message: constants.STUDENT + messages.MSG_NOT_FOUND,
+            });
+        }
+    } catch (error) {
+        if (transaction) await transaction.rollback();
+        return res.status(500).json({
+            message: messages.MSG_CANNOT_DELETE + constants.STUDENT,
+        });
+    }
+};

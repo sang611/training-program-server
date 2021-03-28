@@ -254,22 +254,23 @@ exports.deleteEmployee = async (req, res) => {
       },
     });
     if (employee) {
-      await Account.destroy({
-        where: {
-          uuid: employee.accountUuid,
-        },
-        transaction,
-      });
+
       await Employee.destroy({
         where: {
           uuid: req.params.uuid,
         },
         transaction,
       });
+      await Account.destroy({
+        where: {
+          uuid: employee.accountUuid,
+        },
+        transaction,
+      });
       await transaction.commit();
 
       return res.status(200).json({
-        messages: messages.MSG_SUCCESS,
+        message: messages.MSG_SUCCESS,
       });
     } else {
       return res.status(404).json({

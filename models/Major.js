@@ -9,7 +9,7 @@ const Major = connection.sequelize.define(
       primaryKey: true
     },
     code: {
-      type: Sequelize.STRING(7),
+      type: Sequelize.STRING(15),
       unique: true, 
     },
     vn_name: {

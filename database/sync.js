@@ -14,6 +14,7 @@ const Outline = require("../models/Outline");
 const OutlineLearningOutcome = require("../models/OutlineLearningOutcome");
 const StudentCourse = require("../models/StudentCourse");
 const StudentTrainingProgram = require("../models/StudentTrainingProgram");
+const EmployeeCourse = require("../models/EmployeeCourse");
 
 Employee.belongsTo(Account);
 Account.hasOne(Employee);
@@ -23,6 +24,9 @@ Account.hasOne(Student);
 
 Institution.hasMany(Employee);
 Employee.belongsTo(Institution);
+
+Employee.belongsToMany(Course, {through: EmployeeCourse});
+Course.belongsToMany(Employee, {through: EmployeeCourse});
 
 Institution.hasMany(Student);
 Student.belongsTo(Institution);

@@ -18,6 +18,7 @@ const courseRoutes = require("./staff/routes/course");
 const documentRoutes = require("./staff/routes/document");
 const trainingProgramRouter = require("./staff/routes/trainingProgram");
 const outlineRouter = require("./staff/routes/outline")
+const employeeCourseRouter = require('./staff/routes/employeeCourse')
 const sync = require("./database/sync")
 
 dotenv.config();
@@ -47,5 +48,6 @@ app.use("/courses", courseRoutes);
 app.use("/documents", documentRoutes);
 app.use("/training-programs", trainingProgramRouter);
 app.use("/outlines", outlineRouter);
+app.use("/employee-courses", employeeCourseRouter);
 
 module.exports = app;
