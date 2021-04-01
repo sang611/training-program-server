@@ -8,7 +8,7 @@ const constructSearchQuery = require("../../lib/utils/constructSearchQuery");
 const Op = require('sequelize').Op
 
 exports.createLearningOutcome = async (req, res) => {
-    const {contents, parent_uuid, order, category, plos} = req.body;
+    const {locs, parent_uuid, order, category, plos} = req.body;
     let transaction;
     try {
         if (parent_uuid) {
@@ -25,15 +25,15 @@ exports.createLearningOutcome = async (req, res) => {
         }
         transaction = await connection.sequelize.transaction();
         await Promise.all(
-            contents.map(async (content) => {
+            locs.map(async (loc) => {
                 let id = await uuid();
                 await LearningOutcome.create({
                     uuid: id,
                     parent_uuid: parent_uuid,
-                    content: content,
-                    order: order,
+                    content: loc.content,
                     category: category,
-                    isLink: plos.length > 0
+                    isLink: category == 2 ? !!plos : null,
+                    title: loc.title
                 }, {transaction})
 
                 if (category === 2) {

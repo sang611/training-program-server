@@ -1,4 +1,4 @@
-const LegalDocument = require("../../models/LegalDocument");
+const LegalDocument = require("../../models/Document");
 const uuid = require("uuid/v4");
 const messages = require("../../lib/constants/messages");
 const constants = require("../../lib/constants/constants");

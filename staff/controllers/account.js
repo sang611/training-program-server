@@ -146,10 +146,12 @@ exports.getAUser = async (req, res) => {
                             model: Course
                         },
                         {
-                            model: Institution
-                        },
-                        {
-                            model: TrainingProgram
+                            model: TrainingProgram,
+                            include: [
+                                {
+                                    model: Course
+                                }
+                            ]
                         },
                         {
                             model: Account,

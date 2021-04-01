@@ -17,6 +17,9 @@ const LearningOutcome = connection.sequelize.define("learning_outcome", {
   },
   isLink: {
     type: Sequelize.BOOLEAN
+  },
+  title: {
+    type: Sequelize.INTEGER
   }
 });
 

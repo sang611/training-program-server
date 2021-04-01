@@ -28,8 +28,8 @@ Employee.belongsTo(Institution);
 Employee.belongsToMany(Course, {through: EmployeeCourse});
 Course.belongsToMany(Employee, {through: EmployeeCourse});
 
-Institution.hasMany(Student);
-Student.belongsTo(Institution);
+TrainingProgram.hasMany(Student);
+Student.belongsTo(TrainingProgram);
 
 Student.belongsToMany(Course, {through: StudentCourse});
 Course.belongsToMany(Student, {through: StudentCourse});

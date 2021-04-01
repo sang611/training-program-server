@@ -21,20 +21,39 @@ const outlineRouter = require("./staff/routes/outline")
 const employeeCourseRouter = require('./staff/routes/employeeCourse')
 const sync = require("./database/sync")
 
+
+
+
 dotenv.config();
 app.use(morgan("common"));
 app.use(express.static(__dirname + '/public'));
 
-app.use(bodyParser.json({limit:1024*1024*500, type:'application/json'}));
-app.use(bodyParser.urlencoded({ extended:true,limit:1024*1024*20,type:'application/x-www-form-urlencoded' }));
+app.use(bodyParser.json({limit: 1024 * 1024 * 500, type: 'application/json'}));
+app.use(bodyParser.urlencoded({extended: true, limit: 1024 * 1024 * 20, type: 'application/x-www-form-urlencoded'}));
 app.use(cookieParser());
-app.use(
-  cors({
-    credentials: true,
-      origin: ['http://localhost:3000', 'http://localhost:9999']
-  })
-);
+/*app.use(
+    cors({
+        credentials: true,
+        origin: ['http://localhost:3000', 'http://localhost:9999', 'http://112.137.129.236']
 
+    })
+);*/
+
+app.use(cors(
+    {
+        origin: function(origin, callback){
+            return callback(null, true);
+        },
+        optionsSuccessStatus: 200,
+        credentials: true
+    }
+));
+
+app.get("/abc", (req, res) => {
+    res.json({
+        abc: "abc"
+    })
+})
 
 app.use("/accounts", accountRoutes);
 app.use("/employees", employeeRoutes);
@@ -49,5 +68,7 @@ app.use("/documents", documentRoutes);
 app.use("/training-programs", trainingProgramRouter);
 app.use("/outlines", outlineRouter);
 app.use("/employee-courses", employeeCourseRouter);
+
+
 
 module.exports = app;

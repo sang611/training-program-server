@@ -12,6 +12,7 @@ const constructSearchQuery = require("../../lib/utils/constructSearchQuery");
 const readXlsxFile = require("read-excel-file/node");
 const Institution = require("../../models/Institution");
 const StudentTrainingProgram = require("../../models/StudentTrainingProgram");
+const TrainingProgram = require("../../models/TrainingProgram");
 
 exports.createStudent = async (req, res) => {
     const hashPassword = await bcrypt.hash(req.body.password, saltRounds);
@@ -54,7 +55,7 @@ exports.createStudent = async (req, res) => {
                 class: req.body.class,
                 note: req.body.note,
                 accountUuid: accountUuid,
-                institutionUuid: req.body.institution
+                trainingProgramUuid: req.body.trainingProgram
 
             },
             {transaction}
@@ -201,7 +202,7 @@ exports.getAllStudents = async (req, res) => {
                     where: accountSearchQuery,
                 },
                 {
-                    model: Institution
+                    model: TrainingProgram
                 }
             ],
             ...paginate({page, pageSize}),
