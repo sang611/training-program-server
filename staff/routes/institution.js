@@ -7,7 +7,7 @@ const roles = require('../../lib/constants/roles');
 const multer = require('multer')();
 
 router.post('/', checkAuth, multer.single('logo'),  institutionController.createInstitution);
-router.get('/', checkRole(roles.MODERATOR), institutionController.getAllInstitutions);
+router.get('/', checkAuth, checkRole(roles.ADMIN), institutionController.getAllInstitutions);
 router.delete('/:uuid', checkAuth, institutionController.deleteInstitution);
 router.put('/:uuid', checkAuth, multer.single('logo'), institutionController.updateInstitution);
 

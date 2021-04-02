@@ -32,7 +32,7 @@ exports.createEmployee = async (req, res) => {
         username: req.body.vnu_mail,
         password: hashPassword,
         uuid: accountUuid,
-        role: 1,
+        role: 2,
       },
       { transaction }
     );

@@ -5,6 +5,7 @@ const constants = require('../../lib/constants/constants');
 const connection = require("../../database/connection");
 const LearningOutcomePLO_CLO = require("../../models/LearningOutcomePLO_CLO");
 const constructSearchQuery = require("../../lib/utils/constructSearchQuery");
+const paginate = require("../../lib/utils/paginate");
 const Op = require('sequelize').Op
 
 exports.createLearningOutcome = async (req, res) => {
@@ -76,20 +77,23 @@ exports.getAllLearningOutcomes = async (req, res) => {
     const category=req.params.category;
     for (const property in searchQuery) {
         locSearchQuery[property] = searchQuery[property];
-
     }
+
+    const total = await LearningOutcome.count({
+        where: {
+          [Op.and]: {
+              category: category,
+              ...locSearchQuery
+          }
+
+        },
+    });
+    const page = req.query.page || constants.DEFAULT_PAGE_VALUE;
+    const pageSize = req.query.pageSize || 10;
+    const totalPages = Math.ceil(total / pageSize);
+
     try {
         const learningOutcomes = await LearningOutcome.findAll({
-           /* where: {
-                [Op.and]:  [
-                    {
-                        category: req.params.category,
-                    },
-                    {
-                        locSearchQuery
-                    }
-                ]
-            }*/
             where: category > 0 ? {
                 category: category,
                 ...locSearchQuery
@@ -101,13 +105,15 @@ exports.getAllLearningOutcomes = async (req, res) => {
                     model: LearningOutcome,
                     as: "clos"
                 },
+            ],
 
-            ]
-
-            //order: [[constants.ORDER, constants.ASC]]
+            order: [['title', constants.ASC]],
+            ...paginate({ page, pageSize }),
         });
         res.status(200).json({
-            learningOutcomes: learningOutcomes
+            learningOutcomes: learningOutcomes,
+            totalResults: total,
+            totalPages: totalPages,
         });
     } catch (error) {
         res.status(500).json({
