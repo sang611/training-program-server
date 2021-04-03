@@ -195,7 +195,14 @@ exports.getAllEmployees = async (req, res) => {
           where: accountSearchQuery,
         },
         {
-          model: Institution
+          model: Institution,
+          include: [
+            {
+              model: Institution,
+              as: 'parent',
+              nested: true
+            }
+          ]
         }
       ],
       ...paginate({ page, pageSize }),

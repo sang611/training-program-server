@@ -9,6 +9,8 @@ const Employee = require("../../models/Employee");
 const Course = require("../../models/Course");
 const Institution = require("../../models/Institution");
 const TrainingProgram = require("../../models/TrainingProgram");
+const {Op} = require("sequelize");
+const {sendMail} = require('../../lib/mailer/mailer')
 
 exports.login = async (req, res) => {
     try {
@@ -326,4 +328,67 @@ exports.updateUsernamePassword = async (req, res) => {
             message: messages.MSG_FAIL_CHANGE_LOGIN_INFORMATION
         });
     }
+}
+
+exports.resetPasswordByMail = async (req, res) => {
+    try {
+        let email = req.body.email;
+        const account = await Account.findOne({
+            where: {
+                [Op.or]: [
+                    {username: email},
+                    {username: email.split("@")[0]}
+                ]
+            }
+
+        })
+
+        if (account) {
+            const newRandomPassword = Math.random().toString(36).substr(2, 5);
+            bcrypt.hash(newRandomPassword, saltRounds, async (err, hash) => {
+                if (err) {
+                    return res.status(409).json({
+                        message: messages.MSG_FAIL_CHANGE_PASS
+                    });
+                } else {
+                    await Account.update(
+                        {password: hash},
+                        {
+                            where: {
+                                [Op.or]: [
+                                    {username: req.body.email},
+                                    {username: req.body.email.split("@")[0]}
+                                ]
+
+                            }
+                        }
+                    )
+                    if (!email.includes('@')) email += "@vnu.edu.vn";
+                    sendMail(
+                        email,
+                        "Reset password",
+                        `
+                        <h3>Mật khẩu mới của bạn là: ${newRandomPassword}</h3>
+                        <p>Đặt lại mật khẩu sau khi đăng nhập để đảm bảo an toàn.</p>
+                        `
+                    )
+                    return res.status(200).json({
+                        message: messages.MSG_SUCCESS
+                    });
+                }
+            })
+        }
+        else {
+            res.status(404).json({
+                message: "Không tồn tại email này trong hệ thống"
+            })
+        }
+    } catch (e) {
+        res.status(500).json({
+            message: e.toString()
+        })
+    }
+
+
+
 }

@@ -13,8 +13,13 @@ const Document = connection.sequelize.define("document", {
     type: Sequelize.TEXT,
   },
   document_url: {
-    type: Sequelize.TEXT('long'),
+    type: Sequelize.TEXT,
   },
+
+  thumbnail_link: {
+    type: Sequelize.TEXT,
+  },
+
   category: {
     type: Sequelize.TEXT,
   },

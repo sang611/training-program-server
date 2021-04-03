@@ -20,6 +20,8 @@ const trainingProgramRouter = require("./staff/routes/trainingProgram");
 const outlineRouter = require("./staff/routes/outline")
 const employeeCourseRouter = require('./staff/routes/employeeCourse')
 const sync = require("./database/sync")
+const {get10ListFile} = require("./lib/drive");
+
 
 
 
@@ -69,6 +71,7 @@ app.use("/training-programs", trainingProgramRouter);
 app.use("/outlines", outlineRouter);
 app.use("/employee-courses", employeeCourseRouter);
 
+//get10ListFile();
 
 
 module.exports = app;

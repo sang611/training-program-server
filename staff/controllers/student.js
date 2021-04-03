@@ -13,6 +13,7 @@ const readXlsxFile = require("read-excel-file/node");
 const Institution = require("../../models/Institution");
 const StudentTrainingProgram = require("../../models/StudentTrainingProgram");
 const TrainingProgram = require("../../models/TrainingProgram");
+const {Op} = require("sequelize");
 
 exports.createStudent = async (req, res) => {
     const hashPassword = await bcrypt.hash(req.body.password, saltRounds);
@@ -33,7 +34,7 @@ exports.createStudent = async (req, res) => {
 
         await Account.create(
             {
-                username: req.body.vnu_mail,
+                username: req.body.student_code,
                 password: hashPassword,
                 uuid: accountUuid,
                 role: 3,
@@ -44,9 +45,10 @@ exports.createStudent = async (req, res) => {
         await Student.create(
             {
                 uuid: uuid(),
-                fullname: req.body.full_name,
+                fullname: req.body.fullname,
                 gender: req.body.gender,
-                birthday: req.body.birth_date,
+                birthday: req.body.birthday,
+                address: req.body.address,
                 student_code: req.body.student_code,
                 class: req.body.class,
                 email: req.body.email,
@@ -82,59 +84,77 @@ exports.createStudent = async (req, res) => {
 
 exports.createStudentsByFile = async (req, res) => {
     let filePath =
-        "/Web/KLTN/training-scheme-backend/uploads/" + req.file.filename;
+        "./public/uploads/" + req.file.filename;
     let listStudents = [];
     let listAccounts = [];
-    let listAccountId = [];
     let transaction;
     readXlsxFile(filePath)
         .then(async (rows) => {
             rows.shift();
             try {
                 await Promise.all(
+
                     rows.map(async (row) => {
-                        const account = await Account.findOne({
-                            where: {
-                                username: row[8],
-                            },
-                        });
-                        if (account) {
-                            return res.status(409).json({
-                                message: messages.MSG_USERNAME_EXISTS,
-                            });
-                        }
+
                     })
                 );
 
                 await Promise.all(
                     rows.map(async (row) => {
+
+                        const account = await Account.findOne({
+                            where: {
+                                username: row[1],
+                            },
+                        });
+                        if (!account) {
+
+
+
                         const accountUuid = uuid();
+
                         const hashPassword = await bcrypt.hash(
-                            row[9].toString(),
+                            row[1].toString(),
                             saltRounds
                         );
 
-                        const account = {
-                            username: row[8],
+                        const newAccount = {
+                            username: row[1],
                             password: hashPassword,
                             uuid: accountUuid,
                             role: 3,
                         };
-                        listAccounts.push(account);
+
+                        listAccounts.push(newAccount);
+
+                        const classCode = row[6].split("CQ-")[1];
+
+                        const trainingProgram = await TrainingProgram.findOne(
+                            {
+                                where: {
+                                    classes: {
+                                        [Op.like]: '%'+ classCode + '%'
+                                    }
+                                }
+                            }
+                        );
 
                         const newStudent = {
                             uuid: uuid(),
-                            fullname: row[1],
-                            birth_date: row[6],
-                            student_code: row[7],
-                            email: row[4],
-                            vnu_mail: row[8],
+                            fullname: row[2],
+                            birthday: readXlsxFile.parseExcelDate(row[3]),
+                            address: row[5],
+                            student_code: row[1],
+                            gender: row[4],
+                            vnu_mail: row[1] + "@vnu.edu.vn",
                             note: "",
-                            class: row[2],
+                            class: row[6],
                             accountUuid,
-                            institutionUuid: "8df36f06-46b6-4d06-832d-f73f6f4a46e1",
+                            trainingProgramUuid: trainingProgram.uuid
+
                         };
                         listStudents.push(newStudent);
+                        }
                     })
                 );
 
@@ -158,12 +178,14 @@ exports.createStudentsByFile = async (req, res) => {
                     }
                 }
                 res.status(500).json({
-                    message: messages.MSG_CANNOT_CREATE + constants.STUDENTS + error,
+                    message: messages.MSG_CANNOT_CREATE + constants.STUDENTS + e,
                 });
             }
         })
         .catch((err) => {
-            res.status(500).json(err);
+            res.status(500).json({
+                error: err.toString()
+            });
         });
 };
 

@@ -7,6 +7,8 @@ const uuid = require("uuid/v4");
 const messages = require("../../lib/constants/messages")
 const constants = require("../../lib/constants/constants");
 const fs = require('fs')
+const {downloadFileFromDrive} = require("../../lib/drive");
+const {google} = require("googleapis");
 const {uploadFileToDrive} = require('../../lib/drive')
 
 exports.uploadFile = async (req, res) => {
@@ -26,16 +28,16 @@ exports.uploadFile = async (req, res) => {
         name: file.filename,
         path: filePath,
         mimeType: file.mimetype
-    }, async (fileId) => {
-        req.fileId = fileId
+    }, async (fileId, thumbnailLink) => {
 
         try {
             transaction = await connection.sequelize.transaction();
 
             const document = await Document.create({
                 uuid: uuid(),
-                document_url: req.fileId,
-                name: req.body.name
+                document_url: fileId,
+                thumbnail_link: thumbnailLink,
+                ...req.body
             }, {transaction})
 
             await transaction.commit();
@@ -105,8 +107,47 @@ exports.uploadFile = async (req, res) => {
 
 }
 
+exports.downloadFile = async (req, res) => {
+    let dir = `public/downloads`; // directory from where node.js will look for downloaded file from google drive
+
+    let dest = fs.createWriteStream('public/downloads/tmp.pdf'); // file path where google drive function will save the file
+    let progress = 0; // This will contain the download progress amount
+
+    downloadFileFromDrive(
+        req.params.fileId,
+        (driveResponse) => {
+            driveResponse.data
+                .on('end', () => {
+                    console.log('\nDone downloading file.');
+                    const file = `${dir}/tmp.pdf`; // file path from where node.js will send file to the requested user
+                    res.download(file); // Set disposition and send it.
+                })
+                .on('error', (err) => {
+                    console.error('Error downloading file.');
+                    res.status(500).json({
+                        message: 'Error downloading file.'
+                    })
+
+                })
+                .on('data', (d) => {
+                    progress += d.length;
+                    if (process.stdout.isTTY) {
+                        process.stdout.clearLine();
+                        process.stdout.cursorTo(0);
+                        process.stdout.write(`Downloaded ${progress} bytes`);
+                    }
+                })
+                .pipe(dest);
+        }
+    )
+}
+
 exports.getDocuments = async (req, res) => {
-    const documents = await Document.findAll({});
+    const documents = await Document.findAll({
+        where: {
+            category: req.params.category
+        }
+    });
     return res.status(200).json(
         {
             documents: documents

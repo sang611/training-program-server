@@ -6,9 +6,9 @@ const checkRole = require('../../middlewares/checkRole');
 const roles = require('../../lib/constants/roles');
 const multer = require('multer')();
 
-router.post('/', checkAuth, multer.single('logo'),  institutionController.createInstitution);
-router.get('/', checkAuth, checkRole(roles.ADMIN), institutionController.getAllInstitutions);
-router.delete('/:uuid', checkAuth, institutionController.deleteInstitution);
-router.put('/:uuid', checkAuth, multer.single('logo'), institutionController.updateInstitution);
+router.post('/', checkAuth, checkRole(roles.ADMIN), multer.single('logo'),  institutionController.createInstitution);
+router.get('/', checkAuth, checkRole(roles.LECTURER), institutionController.getAllInstitutions);
+router.delete('/:uuid', checkAuth, checkRole(roles.ADMIN), institutionController.deleteInstitution);
+router.put('/:uuid', checkAuth, checkRole(roles.ADMIN), multer.single('logo'), institutionController.updateInstitution);
 
 module.exports = router;

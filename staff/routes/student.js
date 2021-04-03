@@ -5,7 +5,7 @@ const multer = require('../../lib/utils/multer-config');
 const checkAccessToken = require('../../middlewares/checkAuthentication')
 
 router.post('/', studentController.createStudent);
-// router.post('/list', multer.single('employeesFile'), employeeController.createEmployeesByFile);
+router.post('/list', multer.single('studentsFile'), studentController.createStudentsByFile);
 router.get('/', checkAccessToken, studentController.getAllStudents);
 // router.get('/:uuid', employeeController.getEmployee);
  router.delete('/:uuid', studentController.deleteStudent);

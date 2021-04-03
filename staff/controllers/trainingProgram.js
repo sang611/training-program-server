@@ -531,3 +531,45 @@ exports.addLocToTrainingProgram = async (req, res) => {
         });
     }
 }
+
+exports.addClassesToTrainingProgram = async (req, res) => {
+    const {classes} = req.body;
+    let transaction;
+    try {
+        const trainingProgram = await TrainingProgram.findOne({
+            uuid: req.params.uuid
+        })
+        if (!trainingProgram) {
+            return res.status(404).json({
+                message: constants.TRAINING_PROGRAM + messages.MSG_NOT_FOUND
+            });
+        }
+        transaction = await connection.sequelize.transaction();
+        await TrainingProgram.update(
+            {classes},
+            {
+            where: {
+                uuid: req.params.uuid
+            }
+        }, {transaction})
+        await transaction.commit();
+        res.status(200).json({
+            message: messages.MSG_SUCCESS,
+        });
+    } catch (e) {
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    message: "Đã có lỗi truy vấn xảy ra",
+                });
+            }
+        }
+        res.status(500).json({
+            message: "Đã có lỗi truy vấn xảy ra" + e,
+        });
+    }
+
+
+}

@@ -52,6 +52,9 @@ const TrainingProgram = connection.sequelize.define("training_program", {
   modified_date: {
     type: Sequelize.DATE,
   },
+  classes: {
+    type: Sequelize.TEXT
+  }
 
 });
 

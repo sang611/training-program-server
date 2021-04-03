@@ -12,10 +12,13 @@ const Student = connection.sequelize.define("student", {
         type: Sequelize.TEXT,
     },
     gender: {
-        type: Sequelize.TINYINT
+        type: Sequelize.STRING
     },
     birthday: {
-        type: Sequelize.DATEONLY,
+        type: Sequelize.DATE,
+    },
+    address: {
+        type: Sequelize.STRING
     },
     student_code: {
         type: Sequelize.TEXT,

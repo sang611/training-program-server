@@ -40,6 +40,9 @@ TrainingProgram.belongsTo(Institution);
 Institution.hasMany(Course);
 Course.belongsTo(Institution);
 
+Institution.hasMany(Institution,{foreignKey: 'parent_uuid', as: 'children'});
+Institution.belongsTo(Institution,{foreignKey: 'parent_uuid', as: 'parent'});
+
 TrainingProgram.belongsToMany(Course, { through: TrainingProgramCourse });
 Course.belongsToMany(TrainingProgram, { through: TrainingProgramCourse });
 

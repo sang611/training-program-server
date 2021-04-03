@@ -16,5 +16,7 @@ router.put("/changeRole/:uuid/:role", accountController.updateRoleAccount);
 router.delete("/account", accountController.deleteAccount);
 
 router.put("/loginInformation/:uuid", accountController.updateUsernamePassword);
+router.post("/password/reset", accountController.resetPasswordByMail);
+
 
 module.exports = router;
