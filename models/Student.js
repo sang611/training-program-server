@@ -15,7 +15,7 @@ const Student = connection.sequelize.define("student", {
         type: Sequelize.STRING
     },
     birthday: {
-        type: Sequelize.DATE,
+        type: Sequelize.DATEONLY,
     },
     address: {
         type: Sequelize.STRING

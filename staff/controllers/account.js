@@ -162,7 +162,7 @@ exports.getAUser = async (req, res) => {
                     ]
                 })
             }
-            if (role == 1 || role == 2) {
+            else {
                 user = await Employee.findOne(
                     {
                         where: {

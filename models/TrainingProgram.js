@@ -54,6 +54,9 @@ const TrainingProgram = connection.sequelize.define("training_program", {
   },
   classes: {
     type: Sequelize.TEXT
+  },
+  require_summary: {
+    type: Sequelize.TEXT
   }
 
 });
