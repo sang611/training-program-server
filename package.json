@@ -30,6 +30,7 @@
     "nodemailer": "^6.5.0",
     "read-excel-file": "^5.0.0",
     "sequelize": "^5.15.1",
+    "socket.io": "^4.0.1",
     "uuid": "^3.3.3"
   }
 }

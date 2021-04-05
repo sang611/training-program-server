@@ -196,7 +196,11 @@ exports.getAUser = async (req, res) => {
                 })
             }
         }
-
+        else {
+            return res.status(404).json({
+                message: "Không tìm thấy người dùng"
+            })
+        }
     } catch (e) {
         return res.status(500).json({
             message: "Đã có lỗi xảy ra" + e

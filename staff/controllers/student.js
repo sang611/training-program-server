@@ -14,6 +14,7 @@ const Institution = require("../../models/Institution");
 const StudentTrainingProgram = require("../../models/StudentTrainingProgram");
 const TrainingProgram = require("../../models/TrainingProgram");
 const {Op} = require("sequelize");
+const uploadImageToStorage = require('../../lib/utils/uploadToFirebase')
 
 exports.createStudent = async (req, res) => {
     const hashPassword = await bcrypt.hash(req.body.password, saltRounds);
@@ -493,3 +494,42 @@ exports.deleteStudent = async (req, res) => {
         });
     }
 };
+
+exports.updateAvatar = async (req, res) => {
+    try {
+        const student = await Student.findOne({
+            where: {
+                uuid: req.params.uuid,
+            },
+        });
+        if (!student) {
+            return res.status(404).json({
+                message: messages.MSG_NOT_FOUND,
+            });
+        }
+        let avatarUrl = "";
+        let avatarFile = req.file;
+        await uploadImageToStorage(avatarFile).then((success) => {
+            avatarUrl = success;
+        }).catch((error) => {
+            console.error(error);
+        });
+        await Student.update(
+            {
+                avatar: avatarUrl
+            },
+            {
+                where: {
+                    uuid: req.params.uuid,
+                },
+            }
+        );
+        res.status(200).json({
+            message: messages.MSG_SUCCESS,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: messages.MSG_CANNOT_UPDATE + constants.STUDENT,
+        });
+    }
+}

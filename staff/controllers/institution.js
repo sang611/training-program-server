@@ -4,7 +4,6 @@ const messages = require('../../lib/constants/messages');
 const constants = require('../../lib/constants/constants');
 const paginate = require('../../lib/utils/paginate');
 const constructSearchQuery = require('../../lib/utils/constructSearchQuery');
-const multer = require('multer');
 const uploadImageToStorage = require('../../lib/utils/uploadToFirebase')
 const connection = require("../../database/connection");
 

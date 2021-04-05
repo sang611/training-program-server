@@ -37,7 +37,9 @@ const Employee = connection.sequelize.define(
         note: {
             type: Sequelize.TEXT,
         },
-
+        avatar: {
+            type: Sequelize.STRING(255),
+        },
     }
 );
 

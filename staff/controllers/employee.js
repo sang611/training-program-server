@@ -10,6 +10,7 @@ const paginate = require("../../lib/utils/paginate");
 const constructSearchQuery = require("../../lib/utils/constructSearchQuery");
 const readXlsxFile = require("read-excel-file/node");
 const Institution = require("../../models/Institution");
+const uploadImageToStorage = require('../../lib/utils/uploadToFirebase')
 
 exports.createEmployee = async (req, res) => {
   const hashPassword = await bcrypt.hash(req.body.password, saltRounds);
@@ -311,6 +312,43 @@ exports.updateEmployee = async (req, res) => {
           uuid: req.params.uuid,
         },
       }
+    );
+    res.status(200).json({
+      message: messages.MSG_SUCCESS,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: messages.MSG_CANNOT_UPDATE + constants.EMPLOYEE,
+    });
+  }
+};
+
+exports.updateAvatar = async (req, res) => {
+  try {
+    const employee = await Employee.findOne({
+      where: {
+        uuid: req.params.uuid,
+      },
+    });
+    if (!employee) {
+      return res.status(404).json({
+        message: messages.MSG_NOT_FOUND,
+      });
+    }
+    let avatarUrl = "";
+    let avatarFile = req.file;
+    await uploadImageToStorage(avatarFile).then((success) => {
+      avatarUrl = success;
+    }).catch((error) => {
+      console.error(error);
+    });
+    await Employee.update(
+        {avatar: avatarUrl},
+        {
+          where: {
+            uuid: req.params.uuid,
+          },
+        }
     );
     res.status(200).json({
       message: messages.MSG_SUCCESS,
