@@ -192,7 +192,7 @@ exports.deleteTrainingProgram = async (req, res) => {
 }
 
 exports.addCourseToTrainingProgram = async (req, res) => {
-    const {courses, trainingUuid} = req.body;
+    const {courses, trainingUuid, require_credits, course_type} = req.body;
     let listCourses = [];
     let transaction;
     try {
@@ -213,28 +213,47 @@ exports.addCourseToTrainingProgram = async (req, res) => {
         );
         transaction = await connection.sequelize.transaction();
 
-            courses.forEach( (course) => {
-                const {
-                    course_uuid,
-                    theory_time,
-                    exercise_time,
-                    practice_time,
-                    course_type
-                } = course;
+        if (course_type == 'L') {
+            await TrainingProgram.update(
+                {
+                    require_L: require_credits
+                },
+                {
+                    where: {uuid: trainingUuid}
+                })
+        } else if (course_type == 'BT') {
+            await TrainingProgram.update(
+                {
+                    require_BT: require_credits
+                },
+                {
+                    where: {uuid: trainingUuid}
+                })
+        }
 
-                const newCourse = {
-                    trainingProgramUuid: trainingUuid,
-                    courseUuid: course_uuid,
-                    theory_time,
-                    practice_time,
-                    exercise_time,
-                    course_type
-                };
 
-                listCourses.push(newCourse);
-            })
+        courses.forEach((course) => {
+            const {
+                course_uuid,
+                theory_time,
+                exercise_time,
+                practice_time,
+                course_type
+            } = course;
 
-        let newCourses = await TrainingProgramCourse.bulkCreate(listCourses, { transaction });
+            const newCourse = {
+                trainingProgramUuid: trainingUuid,
+                courseUuid: course_uuid,
+                theory_time,
+                practice_time,
+                exercise_time,
+                course_type
+            };
+
+            listCourses.push(newCourse);
+        })
+
+        let newCourses = await TrainingProgramCourse.bulkCreate(listCourses, {transaction});
         let listNewCourse = [];
         await Promise.all(
             newCourses.map(async (newCourse) => {
@@ -451,7 +470,7 @@ exports.addCourseToTrainingProgramByFile = async (req, res) => {
                 );
 
                 transaction = await connection.sequelize.transaction();
-                await TrainingProgramCourse.bulkCreate(listCourses, { transaction });
+                await TrainingProgramCourse.bulkCreate(listCourses, {transaction});
                 await transaction.commit();
                 res.status(200).json({
                     message: messages.MSG_SUCCESS,
@@ -497,9 +516,11 @@ exports.addLocToTrainingProgram = async (req, res) => {
             })
         );*/
         transaction = await connection.sequelize.transaction();
-        await TrainingProgramLOC.destroy({where: {
-            trainingProgramUuid: trainingUuid
-            }}, {transaction})
+        await TrainingProgramLOC.destroy({
+            where: {
+                trainingProgramUuid: trainingUuid
+            }
+        }, {transaction})
 
         await Promise.all(
             locs.map(async (loc) => {
@@ -511,7 +532,7 @@ exports.addLocToTrainingProgram = async (req, res) => {
                 listLocs.push(newLoc);
             })
         );
-        await TrainingProgramLOC.bulkCreate(listLocs, { transaction });
+        await TrainingProgramLOC.bulkCreate(listLocs, {transaction});
         await transaction.commit();
         res.status(200).json({
             message: messages.MSG_SUCCESS,
@@ -548,10 +569,10 @@ exports.addClassesToTrainingProgram = async (req, res) => {
         await TrainingProgram.update(
             {classes},
             {
-            where: {
-                uuid: req.params.uuid
-            }
-        }, {transaction})
+                where: {
+                    uuid: req.params.uuid
+                }
+            }, {transaction})
         await transaction.commit();
         res.status(200).json({
             message: messages.MSG_SUCCESS,

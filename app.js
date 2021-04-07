@@ -1,10 +1,13 @@
 const express = require("express");
 const app = express();
+const http = require('http');
+const server = http.createServer(app);
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 const cors = require("cors");
 const dotenv = require("dotenv");
+
 
 const accountRoutes = require("./staff/routes/account");
 const employeeRoutes = require("./staff/routes/employee");
@@ -19,11 +22,9 @@ const documentRoutes = require("./staff/routes/document");
 const trainingProgramRouter = require("./staff/routes/trainingProgram");
 const outlineRouter = require("./staff/routes/outline")
 const employeeCourseRouter = require('./staff/routes/employeeCourse')
+const updatingTicketRouter = require('./staff/routes/updatingTicket')
+
 const sync = require("./database/sync")
-const {get10ListFile} = require("./lib/drive");
-
-
-
 
 
 dotenv.config();
@@ -33,6 +34,24 @@ app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json({limit: 1024 * 1024 * 500, type: 'application/json'}));
 app.use(bodyParser.urlencoded({extended: true, limit: 1024 * 1024 * 20, type: 'application/x-www-form-urlencoded'}));
 app.use(cookieParser());
+
+const io = require("socket.io")(
+    server,
+    {
+        cors: {
+            origin: "http://localhost:9999",
+            methods: ["GET", "POST"]
+        }
+    }
+);
+
+io.on("connection", (socket) => {
+    console.log("socket connected")
+    socket.emit("broadcast", "connected nhe")
+});
+
+app.set('socketIo', io);
+
 /*app.use(
     cors({
         credentials: true,
@@ -51,11 +70,6 @@ app.use(cors(
     }
 ));
 
-app.get("/abc", (req, res) => {
-    res.json({
-        abc: "abc"
-    })
-})
 
 app.use("/accounts", accountRoutes);
 app.use("/employees", employeeRoutes);
@@ -70,8 +84,9 @@ app.use("/documents", documentRoutes);
 app.use("/training-programs", trainingProgramRouter);
 app.use("/outlines", outlineRouter);
 app.use("/employee-courses", employeeCourseRouter);
+app.use("/tickets", updatingTicketRouter);
 
 //get10ListFile();
 
 
-module.exports = app;
+module.exports = server;

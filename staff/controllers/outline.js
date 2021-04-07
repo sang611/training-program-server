@@ -7,54 +7,101 @@ const OutlineLearningOutcome = require("../../models/OutlineLearningOutcome");
 const LearningOutcome = require("../../models/LearningOutcome");
 const Course = require("../../models/Course");
 const Institution = require("../../models/Institution");
+const UpdatingTicket = require("../../models/UpdatingTicket");
 
 exports.createOutline = async (req, res) => {
-    let transaction;
-    try {
-        transaction = await connection.sequelize.transaction();
-
-        const outlineUuid = await uuid();
-        await Outline.create({
-            uuid: outlineUuid,
-            lecturers: JSON.stringify(req.body.lecturers) ,
-            goal: req.body.goal,
-            summary_content: req.body.summaryContent,
-            detail_content: req.body.detailContent,
-            documents: req.body.documents,
-            teachingFormality: req.body.teachingFormality,
-            coursePolicy: req.body.coursePolicy,
-            examFormality: req.body.examFormality,
-            courseUuid: req.body.courseUuid
-        }, {transaction})
-
-        await Promise.all(
-            req.body.locs.map(async loc => {
-                await OutlineLearningOutcome.create({
-                    outlineUuid: outlineUuid,
-                    learningOutcomeUuid: loc.uuid,
-                    level: loc.level || loc.outline_learning_outcome.level
-                }, {transaction})
-            })
-        )
-
-        await transaction.commit();
-        res.status(201).json({
-            message: "Đã tạo thành công 1 version đề cương"
-        })
-    } catch (error) {
-        if (transaction) {
-            try {
-                await transaction.rollback();
-            } catch (e) {
-                res.status(500).json({
-                    error: e.toString(),
-                });
-            }
-        }
-        res.status(500).json({
-            message: messages.MSG_CANNOT_CREATE + constants.OUTLINE + error
-        });
+    const outlineUuid = await uuid();
+    let newOutline = {
+        uuid: outlineUuid,
+        lecturers: req.body.lecturers ,
+        goal: req.body.goal,
+        summary_content: req.body.summaryContent,
+        detail_content: req.body.detailContent,
+        documents: req.body.documents,
+        teachingFormality: req.body.teachingFormality,
+        coursePolicy: req.body.coursePolicy,
+        examFormality: req.body.examFormality,
+        courseUuid: req.body.courseUuid
     }
+    if(req.body.userRole == 0 || req.body.userRole == undefined) {
+        let transaction;
+        try {
+            transaction = await connection.sequelize.transaction();
+            await Outline.create({
+               ...newOutline,
+                lecturers: JSON.stringify(req.body.lecturers)
+            }, {transaction})
+
+            await Promise.all(
+                req.body.locs.map(async loc => {
+                    await OutlineLearningOutcome.create({
+                        outlineUuid: outlineUuid,
+                        learningOutcomeUuid: loc.uuid,
+                        level: loc.level || loc.outline_learning_outcome.level
+                    }, {transaction})
+                })
+            )
+
+            await transaction.commit();
+            res.status(201).json({
+                message: "Đã tạo thành công 1 version đề cương"
+            })
+        } catch (error) {
+            if (transaction) {
+                try {
+                    await transaction.rollback();
+                } catch (e) {
+                    res.status(500).json({
+                        error: e.toString(),
+                    });
+                }
+            }
+            res.status(500).json({
+                message: messages.MSG_CANNOT_CREATE + constants.OUTLINE + error
+            });
+        }
+    }
+    else {
+        let transaction;
+        try {
+            transaction = await connection.sequelize.transaction();
+            let employeeUuid = req.body.userRequestId,
+                outlineUuid = req.body.outlineUuid,
+                description = req.body.description_edit;
+
+            await UpdatingTicket.create({
+                uuid: uuid(),
+                employeeUuid,
+                outlineUuid,
+                description,
+                edited_content: JSON.stringify({...newOutline, locs: req.body.locs})
+            }, {transaction})
+
+            await transaction.commit();
+
+            let socket = req.app.get('socketIo');
+            socket.emit('edit_outline', 'Có 1 yêu cầu chỉnh sửa đề cương!');
+            res.status(201).json({
+                message: "Đã gửi yêu cầu chỉnh sửa đề cương cho admin!"
+            })
+
+        } catch (e) {
+            if (transaction) {
+                try {
+                    await transaction.rollback();
+                } catch (e) {
+                    res.status(500).json({
+                        error: e.toString(),
+                    });
+                }
+            }
+            res.status(500).json({
+                message: e.toString()
+            });
+        }
+
+    }
+
 }
 
 exports.getAllOutline = async (req, res) => {
@@ -121,3 +168,101 @@ exports.getAnOutline = async (req, res) => {
         });
     }
 };
+
+exports.acceptUpdatedOutline = async (req, res) => {
+    let transaction;
+    let ticketUuid = req.body.ticketUuid;
+    let employeeUuid = req.body.employeeUuid;
+    let newOutlineContent = req.body.newOutlineContent;
+    let isAccepted = req.body.isAccepted;
+    let socket = req.app.get('socketIo');
+    if(isAccepted) {
+        const outlineUuid = await uuid();
+        let newOutline = {
+            uuid: outlineUuid,
+            lecturers: JSON.stringify(newOutlineContent.lecturers) ,
+            goal: newOutlineContent.goal,
+            summary_content: newOutlineContent.summaryContent,
+            detail_content: newOutlineContent.detailContent,
+            documents: newOutlineContent.documents,
+            teachingFormality: newOutlineContent.teachingFormality,
+            coursePolicy: newOutlineContent.coursePolicy,
+            examFormality: newOutlineContent.examFormality,
+            courseUuid: newOutlineContent.courseUuid
+        }
+
+        try {
+            transaction = await connection.sequelize.transaction();
+            await Outline.create({
+                ...newOutline
+            }, {transaction})
+
+            await Promise.all(
+                newOutlineContent.locs.map(async loc => {
+                    await OutlineLearningOutcome.create({
+                        outlineUuid: outlineUuid,
+                        learningOutcomeUuid: loc.uuid,
+                        level: loc.level || loc.outline_learning_outcome.level
+                    }, {transaction})
+                })
+            )
+
+            await UpdatingTicket.update(
+                {is_accepted: true},
+                {
+                    where: {
+                        uuid: ticketUuid
+                    }
+                },
+                {transaction}
+            )
+
+            await transaction.commit();
+
+
+            socket.emit(employeeUuid, {
+                message: 'Yêu cầu chỉnh sửa đề cương của bạn đã được chấp nhận!',
+                is_accepted: true
+            });
+
+            res.status(201).json({
+                message: "Đã tạo thành công 1 version đề cương"
+            })
+        } catch (e) {
+            if (transaction) {
+                try {
+                    await transaction.rollback();
+                } catch (e) {
+                    res.status(500).json({
+                        error: e.toString(),
+                    });
+                }
+            }
+            res.status(500).json({
+                message: e.toString()
+            });
+        }
+    }
+    else {
+        transaction = await connection.sequelize.transaction();
+        await UpdatingTicket.update(
+            {is_accepted: false},
+            {
+                where: {
+                    uuid: ticketUuid
+                }
+            },
+            {transaction}
+        )
+        await transaction.commit();
+        socket.emit(employeeUuid, {
+            message: 'Yêu cầu chỉnh sửa đề cương của bạn đã bị từ chối!',
+            is_accepted: false
+        });
+        res.status(201).json({
+            message: "Đã reject yêu cầu này"
+        })
+    }
+
+
+}

@@ -35,6 +35,9 @@ const Outline = connection.sequelize.define("outline", {
     },
     createdBy: {
         type: Sequelize.TEXT
+    },
+    description_edit: {
+        type: Sequelize.TEXT('long')
     }
 })
 

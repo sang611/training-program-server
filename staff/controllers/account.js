@@ -9,6 +9,7 @@ const Employee = require("../../models/Employee");
 const Course = require("../../models/Course");
 const Institution = require("../../models/Institution");
 const TrainingProgram = require("../../models/TrainingProgram");
+const UpdatingTicket = require("../../models/UpdatingTicket");
 const {Op} = require("sequelize");
 const {sendMail} = require('../../lib/mailer/mailer')
 
@@ -158,7 +159,8 @@ exports.getAUser = async (req, res) => {
                         {
                             model: Account,
                             attributes: [constants.UUID, constants.USERNAME, constants.ROLE],
-                        }
+                        },
+
                     ]
                 })
             }
@@ -181,6 +183,9 @@ exports.getAUser = async (req, res) => {
                             {
                                 model: Account,
                                 attributes: [constants.UUID, constants.USERNAME, constants.ROLE],
+                            },
+                            {
+                                model: UpdatingTicket
                             }
                         ]
                     }

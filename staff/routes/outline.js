@@ -7,5 +7,7 @@ router.post("/", checkAccessToken, outlineController.createOutline);
 router.get("/:courseUuid", outlineController.getAllOutline);
 router.get("/:courseUuid/:uuid", outlineController.getAnOutline);
 
+router.post('/acception', outlineController.acceptUpdatedOutline)
+
 module.exports = router;
 

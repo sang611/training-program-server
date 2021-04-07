@@ -51,6 +51,7 @@ exports.createInstitution = async (req, res) => {
 }
 
 exports.getAllInstitutions =  async (req, res) => {
+
   try {
     const searchQuery = constructSearchQuery(req.query);
     const total = await Institution.count({
