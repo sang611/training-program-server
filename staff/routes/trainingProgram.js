@@ -10,6 +10,7 @@ router.post("/", checkAuth, trainingProgramController.createTrainingProgram);
 router.get("/", checkAuth, trainingProgramController.getAllTrainingProgram);
 router.get("/:uuid", checkAuth, trainingProgramController.getTrainingProgram);
 router.put("/:uuid", checkAuth, trainingProgramController.updateTrainingProgram);
+router.delete("/:uuid", checkAuth, trainingProgramController.deleteTrainingProgram);
 router.post("/courses", checkAuth, trainingProgramController.addCourseToTrainingProgram);
 
 router.get("/:trainingProgramUuid/courses", trainingProgramController.getCourseOfTrainingProgram);

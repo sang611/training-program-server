@@ -16,6 +16,7 @@ const StudentCourse = require("../models/StudentCourse");
 const StudentTrainingProgram = require("../models/StudentTrainingProgram");
 const EmployeeCourse = require("../models/EmployeeCourse");
 const UpdatingTicket = require("../models/UpdatingTicket");
+const Major = require("../models/Major")
 
 Employee.belongsTo(Account);
 Account.hasOne(Employee);
@@ -48,7 +49,11 @@ TrainingProgram.belongsToMany(Course, { through: TrainingProgramCourse });
 Course.belongsToMany(TrainingProgram, { through: TrainingProgramCourse });
 
 TrainingProgram.belongsToMany(Student, {through: StudentTrainingProgram});
-Student.belongsToMany(TrainingProgram, {through: StudentTrainingProgram})
+Student.belongsToMany(TrainingProgram, {through: StudentTrainingProgram});
+
+Major.hasMany(Student);
+Student.belongsTo(Major);
+
 
 TrainingProgram.belongsToMany(LearningOutcome, { through: TrainingProgramLearningOutcome, uniqueKey: 'trainingUuid_LocUuid' });
 LearningOutcome.belongsToMany(TrainingProgram, { through: TrainingProgramLearningOutcome, uniqueKey: 'trainingUuid_LocUuid' });

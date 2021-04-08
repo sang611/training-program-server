@@ -7,5 +7,7 @@ const documentController = require('../controllers/document')
 router.post('/', multerConfig.single('file'), documentController.uploadFile)
 router.get('/:category', documentController.getDocuments)
 router.get('/downloadOneFile/:fileId', documentController.downloadFile)
+router.put('/:uuid', documentController.updateDocument)
+router.delete('/:uuid', documentController.deleteDocument)
 
 module.exports = router;
