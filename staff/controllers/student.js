@@ -15,6 +15,8 @@ const StudentTrainingProgram = require("../../models/StudentTrainingProgram");
 const TrainingProgram = require("../../models/TrainingProgram");
 const {Op} = require("sequelize");
 const uploadImageToStorage = require('../../lib/utils/uploadToFirebase')
+const base64 = require('file-base64')
+const path = require('path')
 
 exports.createStudent = async (req, res) => {
     const hashPassword = await bcrypt.hash(req.body.password, saltRounds);
@@ -94,7 +96,6 @@ exports.createStudentsByFile = async (req, res) => {
             rows.shift();
             try {
                 await Promise.all(
-
                     rows.map(async (row) => {
 
                     })
@@ -111,50 +112,49 @@ exports.createStudentsByFile = async (req, res) => {
                         if (!account) {
 
 
+                            const accountUuid = uuid();
 
-                        const accountUuid = uuid();
+                            const hashPassword = await bcrypt.hash(
+                                row[1].toString(),
+                                saltRounds
+                            );
 
-                        const hashPassword = await bcrypt.hash(
-                            row[1].toString(),
-                            saltRounds
-                        );
+                            const newAccount = {
+                                username: row[1],
+                                password: hashPassword,
+                                uuid: accountUuid,
+                                role: 3,
+                            };
 
-                        const newAccount = {
-                            username: row[1],
-                            password: hashPassword,
-                            uuid: accountUuid,
-                            role: 3,
-                        };
+                            listAccounts.push(newAccount);
 
-                        listAccounts.push(newAccount);
+                            const classCode = row[6].split("CQ-")[1];
 
-                        const classCode = row[6].split("CQ-")[1];
-
-                        const trainingProgram = await TrainingProgram.findOne(
-                            {
-                                where: {
-                                    classes: {
-                                        [Op.like]: '%'+ classCode + '%'
+                            const trainingProgram = await TrainingProgram.findOne(
+                                {
+                                    where: {
+                                        classes: {
+                                            [Op.like]: '%' + classCode + '%'
+                                        }
                                     }
                                 }
-                            }
-                        );
+                            );
 
-                        const newStudent = {
-                            uuid: uuid(),
-                            fullname: row[2],
-                            birthday: readXlsxFile.parseExcelDate(row[3]),
-                            address: row[5],
-                            student_code: row[1],
-                            gender: row[4],
-                            vnu_mail: row[1] + "@vnu.edu.vn",
-                            note: "",
-                            class: row[6],
-                            accountUuid,
-                            trainingProgramUuid: trainingProgram.uuid
+                            const newStudent = {
+                                uuid: uuid(),
+                                fullname: row[2],
+                                birthday: readXlsxFile.parseExcelDate(row[3]),
+                                address: row[5],
+                                student_code: row[1],
+                                gender: row[4],
+                                vnu_mail: row[1] + "@vnu.edu.vn",
+                                note: "",
+                                class: row[6],
+                                accountUuid,
+                                trainingProgramUuid: trainingProgram.uuid
 
-                        };
-                        listStudents.push(newStudent);
+                            };
+                            listStudents.push(newStudent);
                         }
                     })
                 );
@@ -437,19 +437,44 @@ exports.updateStudent = async (req, res) => {
             });
         }
         await Student.update(
-            { ...req.body },
+            {...req.body},
             {
                 where: {
                     uuid: req.params.uuid,
                 },
             }
         );
+
+        const studentTrainingProgram = await StudentTrainingProgram.findOne({
+            where: {
+                studentUuid: req.params.uuid
+            }
+        })
+
+        if (studentTrainingProgram) {
+            await StudentTrainingProgram.update(
+                {
+                    trainingProgramUuid: req.body.trainingProgramUuid
+                },
+                {
+                    where: {
+                        studentUuid: req.params.uuid
+                    }
+                })
+        } else {
+            await StudentTrainingProgram.create({
+                studentUuid: req.params.uuid,
+                trainingProgramUuid: req.body.trainingProgramUuid
+            })
+
+        }
+
         res.status(200).json({
             message: messages.MSG_SUCCESS,
         });
     } catch (error) {
         res.status(500).json({
-            message: messages.MSG_CANNOT_UPDATE + constants.STUDENT,
+            message: messages.MSG_CANNOT_UPDATE + constants.STUDENT + error,
         });
     }
 };
@@ -496,6 +521,27 @@ exports.deleteStudent = async (req, res) => {
 };
 
 exports.updateAvatar = async (req, res) => {
+    let avatarUrl = "";
+    let avatarFile = req.file;
+
+    try {
+        avatarUrl = await uploadImageToStorage(avatarFile)
+    } catch (e) {
+        const DIR = path.join(__dirname, '../../public/uploads/');
+        let filePath = DIR + avatarFile.filename;
+        base64.encode(filePath, async function (err, base64String) {
+                if(base64String) {
+                    avatarUrl = base64String
+                }
+                else {
+                    res.status(500).json({
+                        message: err
+                    })
+                }
+            }
+        )
+    }
+
     try {
         const student = await Student.findOne({
             where: {
@@ -507,13 +553,7 @@ exports.updateAvatar = async (req, res) => {
                 message: messages.MSG_NOT_FOUND,
             });
         }
-        let avatarUrl = "";
-        let avatarFile = req.file;
-        await uploadImageToStorage(avatarFile).then((success) => {
-            avatarUrl = success;
-        }).catch((error) => {
-            console.error(error);
-        });
+
         await Student.update(
             {
                 avatar: avatarUrl

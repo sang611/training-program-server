@@ -11,7 +11,7 @@ router.get('/', checkAccessToken, studentController.getAllStudents);
 // router.get('/:uuid', employeeController.getEmployee);
  router.delete('/:uuid', studentController.deleteStudent);
  router.put('/:uuid', studentController.updateStudent);
-router.post('/:uuid/avatar', multer.single('file'), studentController.updateAvatar);
+router.post('/:uuid/avatar', multerConfig.single('file'), studentController.updateAvatar);
 router.post('/course', studentController.addCourseToPlan);
 
 router.post('/training-program/follow', studentController.joinTrainingProgram);

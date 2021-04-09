@@ -1,3 +1,5 @@
+const base64 = require("file-base64") ;
+
 const Employee = require("../../models/Employee");
 const Account = require("../../models/Account");
 const bcrypt = require("bcrypt");
@@ -340,7 +342,21 @@ exports.updateAvatar = async (req, res) => {
     await uploadImageToStorage(avatarFile).then((success) => {
       avatarUrl = success;
     }).catch((error) => {
-      console.error(error);
+      const DIR = path.join(__dirname, '../../public/uploads/');
+      let filePath = DIR + avatarFile.filename;
+      base64.encode(filePath, async function (err, base64String) {
+            if(base64String) {
+              avatarUrl = base64String
+            }
+            else {
+              res.status(500).json({
+                message: err
+              })
+            }
+
+
+          }
+      )
     });
     await Employee.update(
         {avatar: avatarUrl},
