@@ -1,5 +1,5 @@
 const base64 = require("file-base64") ;
-
+const path = require('path')
 const Employee = require("../../models/Employee");
 const Account = require("../../models/Account");
 const bcrypt = require("bcrypt");
@@ -326,6 +326,27 @@ exports.updateEmployee = async (req, res) => {
 };
 
 exports.updateAvatar = async (req, res) => {
+  let avatarUrl = "";
+  let avatarFile = req.file;
+
+  try {
+    avatarUrl = await uploadImageToStorage(avatarFile)
+  } catch (e) {
+    const DIR = path.join(__dirname, '../../public/uploads/');
+    let filePath = DIR + avatarFile.filename;
+    base64.encode(filePath, async function (err, base64String) {
+          if(base64String) {
+            avatarUrl = base64String
+          }
+          else {
+            res.status(500).json({
+              message: err
+            })
+          }
+        }
+    )
+  }
+
   try {
     const employee = await Employee.findOne({
       where: {
@@ -337,29 +358,11 @@ exports.updateAvatar = async (req, res) => {
         message: messages.MSG_NOT_FOUND,
       });
     }
-    let avatarUrl = "";
-    let avatarFile = req.file;
-    await uploadImageToStorage(avatarFile).then((success) => {
-      avatarUrl = success;
-    }).catch((error) => {
-      const DIR = path.join(__dirname, '../../public/uploads/');
-      let filePath = DIR + avatarFile.filename;
-      base64.encode(filePath, async function (err, base64String) {
-            if(base64String) {
-              avatarUrl = base64String
-            }
-            else {
-              res.status(500).json({
-                message: err
-              })
-            }
 
-
-          }
-      )
-    });
     await Employee.update(
-        {avatar: avatarUrl},
+        {
+          avatar: avatarUrl
+        },
         {
           where: {
             uuid: req.params.uuid,

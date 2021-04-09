@@ -244,7 +244,7 @@ exports.getAllStudents = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({
-            message: messages.MSG_CANNOT_GET + constants.STUDENTS,
+            message: messages.MSG_CANNOT_GET + constants.STUDENTS + error,
         });
     }
 };
