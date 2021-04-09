@@ -15,8 +15,12 @@ const StudentTrainingProgram = require("../../models/StudentTrainingProgram");
 const TrainingProgram = require("../../models/TrainingProgram");
 const {Op} = require("sequelize");
 const uploadImageToStorage = require('../../lib/utils/uploadToFirebase')
+
 const base64 = require('file-base64')
 const path = require('path')
+
+const Major = require("../../models/Major");
+
 
 exports.createStudent = async (req, res) => {
     const hashPassword = await bcrypt.hash(req.body.password, saltRounds);
@@ -60,8 +64,8 @@ exports.createStudent = async (req, res) => {
                 class: req.body.class,
                 note: req.body.note,
                 accountUuid: accountUuid,
-                trainingProgramUuid: req.body.trainingProgram
-
+                trainingProgramUuid: req.body.trainingProgramUuid,
+                majorUuid: req.body.majorUuid
             },
             {transaction}
         );
@@ -226,6 +230,9 @@ exports.getAllStudents = async (req, res) => {
                 },
                 {
                     model: TrainingProgram
+                },
+                {
+                    model: Major
                 }
             ],
             ...paginate({page, pageSize}),
@@ -445,13 +452,16 @@ exports.updateStudent = async (req, res) => {
             }
         );
 
-        const studentTrainingProgram = await StudentTrainingProgram.findOne({
+
+        const studentTraining = await StudentTrainingProgram.findOne({
             where: {
                 studentUuid: req.params.uuid
             }
+
         })
 
-        if (studentTrainingProgram) {
+        if (studentTraining) {
+
             await StudentTrainingProgram.update(
                 {
                     trainingProgramUuid: req.body.trainingProgramUuid
@@ -460,7 +470,10 @@ exports.updateStudent = async (req, res) => {
                     where: {
                         studentUuid: req.params.uuid
                     }
-                })
+
+                }
+            )
+
         } else {
             await StudentTrainingProgram.create({
                 studentUuid: req.params.uuid,

@@ -64,47 +64,6 @@ exports.uploadFile = async (req, res) => {
 
 
 
-
-    /*const DIR = path.join(__dirname, '../../public/uploads/');
-    let filePath = DIR + file.filename;
-
-
-      base64.encode(filePath, async function(err, base64String) {
-          try {
-              fileUrl = base64String
-
-              transaction = await connection.sequelize.transaction();
-
-              await LegalDocument.create({
-                  uuid: uuid(),
-                  document_url: fileUrl,
-                  name: file.filename
-              }, {transaction})
-
-              await transaction.commit();
-
-              res.status(201).json({
-                  message: messages.MSG_SUCCESS
-              })
-          }
-          catch (e) {
-              if (transaction) {
-                  try {
-                      await transaction.rollback();
-                  } catch (e) {
-                      res.status(500).json({
-                          message: e.toString(),
-                      });
-                  }
-              }
-              res.status(500).json({
-                  message: messages.MSG_CANNOT_CREATE + constants.DOCUMENT + e,
-              });
-          }
-
-    });*/
-
-
 }
 
 exports.downloadFile = async (req, res) => {
@@ -153,4 +112,54 @@ exports.getDocuments = async (req, res) => {
             documents: documents
         }
     )
+}
+
+exports.updateDocument = async (req, res) => {
+    const {name, description} = req.body;
+    const {uuid} = req.params;
+
+    try {
+
+        await Document.update(
+            {
+                name,
+                description
+            },
+            {
+                where: {
+                    uuid: uuid
+                }
+            }
+        )
+        return res.status(200).json({
+            message: messages.MSG_SUCCESS
+        })
+    } catch (e) {
+        return res.status(500).json({
+            message: messages.MSG_CANNOT_UPDATE + constants.DOCUMENT
+        })
+    }
+
+}
+
+exports.deleteDocument = async (req, res) => {
+    const {uuid} = req.params;
+
+    try {
+        await Document.destroy(
+            {
+                where: {
+                    uuid: uuid
+                }
+            }
+        )
+        return res.status(200).json({
+            message: messages.MSG_SUCCESS
+        })
+    } catch (e) {
+        return res.status(500).json({
+            message: messages.MSG_CANNOT_DELETE + constants.DOCUMENT
+        })
+    }
+
 }
