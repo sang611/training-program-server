@@ -17,7 +17,7 @@ const Employee = connection.sequelize.define(
             type: Sequelize.DATEONLY
         },
         gender: {
-            type: Sequelize.TINYINT
+            type: Sequelize.STRING
         },
         academic_rank: {
             type: Sequelize.STRING(100),

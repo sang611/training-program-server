@@ -20,6 +20,7 @@ const base64 = require('file-base64')
 const path = require('path')
 
 const Major = require("../../models/Major");
+const Course = require("../../models/Course");
 
 
 exports.createStudent = async (req, res) => {
@@ -101,7 +102,6 @@ exports.createStudentsByFile = async (req, res) => {
             try {
                 await Promise.all(
                     rows.map(async (row) => {
-
                     })
                 );
 
@@ -144,6 +144,12 @@ exports.createStudentsByFile = async (req, res) => {
                                 }
                             );
 
+                            const major = await Major.findOne({
+                                where: {
+                                    code: trainingProgram.training_program_code
+                                }
+                            })
+
                             const newStudent = {
                                 uuid: uuid(),
                                 fullname: row[2],
@@ -155,8 +161,8 @@ exports.createStudentsByFile = async (req, res) => {
                                 note: "",
                                 class: row[6],
                                 accountUuid,
-                                trainingProgramUuid: trainingProgram.uuid
-
+                                trainingProgramUuid: trainingProgram.uuid,
+                                majorUuid: major.uuid
                             };
                             listStudents.push(newStudent);
                         }
@@ -233,6 +239,9 @@ exports.getAllStudents = async (req, res) => {
                 },
                 {
                     model: Major
+                },
+                {
+                    model: Course
                 }
             ],
             ...paginate({page, pageSize}),

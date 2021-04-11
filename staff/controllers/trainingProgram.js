@@ -65,6 +65,7 @@ exports.getAllTrainingProgram = async (req, res) => {
                 },
                 {
                     model: Course,
+
                 },
                 {
                     model: LearningOutcome,
@@ -111,6 +112,15 @@ exports.getTrainingProgram = async (req, res) => {
                 },
                 {
                     model: Course,
+                    include: {
+                        model: Outline,
+                        separate: true,
+                        order: [
+                            ['createdAt', 'DESC'],
+                        ],
+                    },
+
+
                 },
                 {
                     model: LearningOutcome,
@@ -316,7 +326,7 @@ exports.getCourseOfTrainingProgram = async (req, res) => {
     }
 }
 
-exports.updateCourseToTrainingProgram = async (req, res) => {
+exports.updateCourseDocument = async (req, res) => {
     let transaction;
     try {
         transaction = await connection.sequelize.transaction();
@@ -348,12 +358,108 @@ exports.updateCourseToTrainingProgram = async (req, res) => {
     }
 }
 
+exports.addCourseLecturer = async (req, res) => {
+    let transaction;
+    const {lecturer} = req.body;
+
+    try {
+
+        const {lecturers} = await TrainingProgramCourse.findOne({
+            where: {
+                trainingProgramUuid: req.params.trainingProgramUuid,
+                courseUuid: req.params.courseUuid
+            }
+        })
+
+        transaction = await connection.sequelize.transaction();
+        await TrainingProgramCourse.update(
+            {
+                lecturers: lecturers ? JSON.stringify(
+                    [...JSON.parse(lecturers), lecturer]
+                ) : JSON.stringify(
+                    new Array(lecturer)
+                )
+            },
+            {
+                where: {
+                    trainingProgramUuid: req.params.trainingProgramUuid,
+                    courseUuid: req.params.courseUuid
+                }
+            }, {transaction}
+        )
+        await transaction.commit();
+        res.status(200).json({
+            message: messages.MSG_SUCCESS
+        });
+    } catch (e) {
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    message: "Đã có lỗi truy vấn xảy ra",
+                });
+            }
+        }
+        res.status(500).json({
+            message: "Không thể cập nhật học phần này" + e
+        });
+    }
+}
+
+exports.removeCourseLecturer = async (req, res) => {
+    let transaction;
+    const {lecturer} = req.body;
+
+    try {
+
+        const {lecturers} = await TrainingProgramCourse.findOne({
+            where: {
+                trainingProgramUuid: req.params.trainingProgramUuid,
+                courseUuid: req.params.courseUuid
+            }
+        })
+
+        transaction = await connection.sequelize.transaction();
+        await TrainingProgramCourse.update(
+            {
+                lecturers: JSON.stringify(
+                    JSON.parse(lecturers).filter(lec => lec.uuid !== lecturer.uuid)
+                )
+            },
+            {
+                where: {
+                    trainingProgramUuid: req.params.trainingProgramUuid,
+                    courseUuid: req.params.courseUuid
+                }
+            }, {transaction}
+        )
+        await transaction.commit();
+        res.status(200).json({
+            message: messages.MSG_SUCCESS
+        });
+    } catch (e) {
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    message: "Đã có lỗi truy vấn xảy ra",
+                });
+            }
+        }
+        res.status(500).json({
+            message: "Không thể cập nhật học phần này" + e
+        });
+    }
+}
+
 exports.updateTrainingSequence = async (req, res) => {
     const {trainingProgramUuid, coursesOfSemester, semester} = req.body;
     let transaction;
     try {
         transaction = await connection.sequelize.transaction();
-        await Promise.all(
+        /*await Promise.all(
             coursesOfSemester.map(async courseUuid => {
                 TrainingProgramCourse.update(
                     {semester},
@@ -365,6 +471,15 @@ exports.updateTrainingSequence = async (req, res) => {
                     }
                 )
             }, {transaction})
+        )*/
+        await TrainingProgramCourse.update(
+            {semester},
+            {
+                where: {
+                    trainingProgramUuid,
+                    courseUuid: coursesOfSemester
+                }
+            }
         )
         await transaction.commit();
         res.status(200).json({
@@ -416,6 +531,38 @@ exports.deleteCourseToTrainingProgram = async (req, res) => {
             message: "Đã có lỗi xảy ra",
         });
     }
+}
+
+exports.updateCourseToTrainingProgram = async (req, res) => {
+    let transaction;
+        try {
+            transaction = await connection.sequelize.transaction();
+            await TrainingProgramCourse.update(
+                {...req.body},
+                {
+                where: {
+                    trainingProgramUuid: req.params.trainingProgramUuid,
+                    courseUuid: req.params.courseUuid
+                }
+            }, {transaction})
+            await transaction.commit();
+            res.status(200).json({
+                message: messages.MSG_SUCCESS
+            });
+        } catch (e) {
+            if (transaction) {
+                try {
+                    await transaction.rollback();
+                } catch (e) {
+                    res.status(500).json({
+                        message: "Đã có lỗi truy vấn xảy ra",
+                    });
+                }
+            }
+            res.status(500).json({
+                message: "Đã có lỗi xảy ra",
+            });
+        }
 }
 
 exports.addCourseToTrainingProgramByFile = async (req, res) => {

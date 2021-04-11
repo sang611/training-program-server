@@ -26,8 +26,8 @@ exports.assignCourse = async (req, res) => {
             })
 
             await EmployeeCourse.destroy({
-                where:  {
-                    [Op.and] :
+                where: {
+                    [Op.and]:
                         {
                             employeeUuid: req.body.employeeUuid,
                             courseUuid: {
@@ -36,6 +36,8 @@ exports.assignCourse = async (req, res) => {
                         }
                 }
             }, {transaction})
+
+            let insertDatas = [];
 
             await Promise.all(
                 req.body.courses.map(async courseUuid => {
@@ -48,15 +50,24 @@ exports.assignCourse = async (req, res) => {
                     }, {transaction})
 
 
-                    if(!employee_course) {
+                    /*if(!employee_course) {
                         await EmployeeCourse.create({
                             employeeUuid: req.body.employeeUuid,
                             courseUuid: courseUuid
                         }, {transaction})
-                    }
-                    await transaction.commit()
+                    }*/
+                    if (!employee_course)
+                        insertDatas.push({
+                            employeeUuid: req.body.employeeUuid,
+                            courseUuid: courseUuid
+                        })
+
+
                 })
             )
+
+            await EmployeeCourse.bulkCreate(insertDatas, {transaction});
+            await transaction.commit();
 
             return res.status(201).json({
                 message: messages.MSG_SUCCESS
@@ -95,7 +106,7 @@ exports.grantModerator = async (req, res) => {
             employeeUuid,
             courseUuid
         })
-        if(employee_course) {
+        if (employee_course) {
             await EmployeeCourse.update(
                 {isModerator},
                 {
@@ -109,8 +120,7 @@ exports.grantModerator = async (req, res) => {
             res.status(200).json({
                 message: messages.MSG_GRANT_SUCCESS + constants.COURSE
             })
-        }
-        else {
+        } else {
             res.status(409).json({
                 message: messages.MSG_NOT_FOUND + constants.EMPLOYEE
             })

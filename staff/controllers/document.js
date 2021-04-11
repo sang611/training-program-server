@@ -10,6 +10,7 @@ const fs = require('fs')
 const {downloadFileFromDrive} = require("../../lib/drive");
 const {google} = require("googleapis");
 const {uploadFileToDrive} = require('../../lib/drive')
+const constructSearchQuery = require('../../lib/utils/constructSearchQuery');
 
 exports.uploadFile = async (req, res) => {
     let transaction;
@@ -102,9 +103,11 @@ exports.downloadFile = async (req, res) => {
 }
 
 exports.getDocuments = async (req, res) => {
+    const searchQuery = constructSearchQuery(req.query);
     const documents = await Document.findAll({
         where: {
-            category: req.params.category
+            category: req.params.category,
+            ...searchQuery
         }
     });
     return res.status(200).json(

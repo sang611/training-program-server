@@ -12,6 +12,6 @@ router.get('/:uuid', employeeController.getEmployee);
 router.delete('/:uuid', employeeController.deleteEmployee);
 router.put('/:uuid', employeeController.updateEmployee);
 
-router.post('/:uuid/avatar', multerConfig.single('file'), employeeController.updateAvatar);
+router.post('/:uuid/avatar', multer.single('file'), employeeController.updateAvatar);
 
 module.exports = router;

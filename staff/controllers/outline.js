@@ -8,12 +8,13 @@ const LearningOutcome = require("../../models/LearningOutcome");
 const Course = require("../../models/Course");
 const Institution = require("../../models/Institution");
 const UpdatingTicket = require("../../models/UpdatingTicket");
+const Employee = require("../../models/Employee");
 
 exports.createOutline = async (req, res) => {
     const outlineUuid = await uuid();
     let newOutline = {
         uuid: outlineUuid,
-        lecturers: req.body.lecturers ,
+        lecturers: req.body.lecturers,
         goal: req.body.goal,
         summary_content: req.body.summaryContent,
         detail_content: req.body.detailContent,
@@ -23,12 +24,14 @@ exports.createOutline = async (req, res) => {
         examFormality: req.body.examFormality,
         courseUuid: req.body.courseUuid
     }
-    if(req.body.userRole == 0 || req.body.userRole == undefined) {
-        let transaction;
-        try {
+
+    try {
+        if (req.body.userRole == 0 || req.body.userRole == undefined) {
+            let transaction;
+
             transaction = await connection.sequelize.transaction();
             await Outline.create({
-               ...newOutline,
+                ...newOutline,
                 lecturers: JSON.stringify(req.body.lecturers)
             }, {transaction})
 
@@ -46,24 +49,9 @@ exports.createOutline = async (req, res) => {
             res.status(201).json({
                 message: "Đã tạo thành công 1 version đề cương"
             })
-        } catch (error) {
-            if (transaction) {
-                try {
-                    await transaction.rollback();
-                } catch (e) {
-                    res.status(500).json({
-                        error: e.toString(),
-                    });
-                }
-            }
-            res.status(500).json({
-                message: messages.MSG_CANNOT_CREATE + constants.OUTLINE + error
-            });
-        }
-    }
-    else {
-        let transaction;
-        try {
+        } else {
+            let transaction;
+
             transaction = await connection.sequelize.transaction();
             let employeeUuid = req.body.userRequestId,
                 outlineUuid = req.body.outlineUuid,
@@ -79,28 +67,30 @@ exports.createOutline = async (req, res) => {
 
             await transaction.commit();
 
+
+
             let socket = req.app.get('socketIo');
             socket.emit('edit_outline', 'Có 1 yêu cầu chỉnh sửa đề cương!');
             res.status(201).json({
                 message: "Đã gửi yêu cầu chỉnh sửa đề cương cho admin!"
             })
 
-        } catch (e) {
-            if (transaction) {
-                try {
-                    await transaction.rollback();
-                } catch (e) {
-                    res.status(500).json({
-                        error: e.toString(),
-                    });
-                }
-            }
-            res.status(500).json({
-                message: e.toString()
-            });
         }
-
+    } catch (e) {
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    error: e.toString(),
+                });
+            }
+        }
+        res.status(500).json({
+            message: e.toString()
+        });
     }
+
 
 }
 
@@ -109,14 +99,14 @@ exports.getAllOutline = async (req, res) => {
     try {
         //const searchQuery = constructSearchQuery(req.query);
         const outlines = await Outline.findAll({
-           where: {
-               courseUuid: courseUuid,
+            where: {
+                courseUuid: courseUuid,
 
-           },
-           include: [
-               {
-                   model: LearningOutcome
-               }
+            },
+            include: [
+                {
+                    model: LearningOutcome
+                }
             ],
             order: [
                 ['createdAt', 'DESC'],
@@ -169,6 +159,33 @@ exports.getAnOutline = async (req, res) => {
     }
 };
 
+exports.deleteOutline = async (req, res) => {
+    try {
+        const outline = await Outline.findOne({
+            where: {
+                uuid: req.params.uuid
+            }
+        });
+        if (!outline) {
+            return res.status(404).json({
+                message: constants.OUTLINE + messages.MSG_NOT_FOUND
+            });
+        }
+        await Outline.destroy({
+            where: {
+                uuid: req.params.uuid
+            }
+        })
+        res.status(200).json({
+            message: messages.MSG_SUCCESS
+        });
+    } catch(error) {
+        res.status(500).json({
+            message: messages.MSG_CANNOT_DELETE + constants.OUTLINE
+        });
+    }
+}
+
 exports.acceptUpdatedOutline = async (req, res) => {
     let transaction;
     let ticketUuid = req.body.ticketUuid;
@@ -176,11 +193,16 @@ exports.acceptUpdatedOutline = async (req, res) => {
     let newOutlineContent = req.body.newOutlineContent;
     let isAccepted = req.body.isAccepted;
     let socket = req.app.get('socketIo');
-    if(isAccepted) {
+    if (isAccepted) {
         const outlineUuid = await uuid();
+        const lecturer = await Employee.findOne({
+            where: {
+                uuid: employeeUuid
+            }
+        })
         let newOutline = {
             uuid: outlineUuid,
-            lecturers: JSON.stringify(newOutlineContent.lecturers) ,
+            lecturers: JSON.stringify(newOutlineContent.lecturers),
             goal: newOutlineContent.goal,
             summary_content: newOutlineContent.summaryContent,
             detail_content: newOutlineContent.detailContent,
@@ -188,10 +210,14 @@ exports.acceptUpdatedOutline = async (req, res) => {
             teachingFormality: newOutlineContent.teachingFormality,
             coursePolicy: newOutlineContent.coursePolicy,
             examFormality: newOutlineContent.examFormality,
-            courseUuid: newOutlineContent.courseUuid
+            courseUuid: newOutlineContent.courseUuid,
+            createdBy: JSON.stringify(lecturer)
         }
 
         try {
+
+
+
             transaction = await connection.sequelize.transaction();
             await Outline.create({
                 ...newOutline
@@ -242,8 +268,7 @@ exports.acceptUpdatedOutline = async (req, res) => {
                 message: e.toString()
             });
         }
-    }
-    else {
+    } else {
         transaction = await connection.sequelize.transaction();
         await UpdatingTicket.update(
             {is_accepted: false},

@@ -38,10 +38,10 @@ const TrainingProgram = connection.sequelize.define("training_program", {
     type: Sequelize.TEXT,
   },
   common_destination: {
-    type: Sequelize.TEXT
+    type: Sequelize.TEXT('long')
   },
   specific_destination: {
-    type: Sequelize.TEXT
+    type: Sequelize.TEXT('long')
   },
   lock_edit: {
     type: Sequelize.TINYINT,

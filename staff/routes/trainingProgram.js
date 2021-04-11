@@ -14,9 +14,15 @@ router.delete("/:uuid", checkAuth, trainingProgramController.deleteTrainingProgr
 router.post("/courses", checkAuth, trainingProgramController.addCourseToTrainingProgram);
 
 router.get("/:trainingProgramUuid/courses", trainingProgramController.getCourseOfTrainingProgram);
-router.put("/:trainingProgramUuid/courses/:courseUuid", checkAuth, trainingProgramController.updateCourseToTrainingProgram);
+router.put("/:trainingProgramUuid/courses/:courseUuid/documents", checkAuth, trainingProgramController.updateCourseDocument);
+router.put("/:trainingProgramUuid/courses/:courseUuid/lecturers/adding", checkAuth, trainingProgramController.addCourseLecturer);
+router.put("/:trainingProgramUuid/courses/:courseUuid/lecturers/removing", checkAuth, trainingProgramController.removeCourseLecturer);
+
 router.put("/courses/:trainingProgramUuid/planning", checkAuth, trainingProgramController.updateTrainingSequence);
+
+
 router.delete("/:trainingProgramUuid/courses/:courseUuid", checkAuth, trainingProgramController.deleteCourseToTrainingProgram);
+router.put("/:trainingProgramUuid/courses/:courseUuid", checkAuth, trainingProgramController.updateCourseToTrainingProgram);
 
 router.post("/courses/file", checkAuth, multer.single('coursesFile'), trainingProgramController.addCourseToTrainingProgramByFile);
 router.post("/learning-outcomes", checkAuth, checkRole(roles.ADMIN), trainingProgramController.addLocToTrainingProgram);
