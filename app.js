@@ -40,7 +40,9 @@ const io = require("socket.io")(
     server,
     {
         cors: {
-            origin: "http://localhost:9999",
+            origin: function(origin, callback){
+                return callback(null, true);
+            },
             methods: ["GET", "POST"]
         }
     }

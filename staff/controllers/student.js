@@ -235,7 +235,12 @@ exports.getAllStudents = async (req, res) => {
                     where: accountSearchQuery,
                 },
                 {
-                    model: TrainingProgram
+                    model: TrainingProgram,
+                    include: [
+                        {
+                            model: Course
+                        }
+                    ]
                 },
                 {
                     model: Major
@@ -441,6 +446,7 @@ exports.getOutTrainingProgram = async (req, res) => {
 }
 
 exports.updateStudent = async (req, res) => {
+    let transaction;
     try {
         const student = await Student.findOne({
             where: {
@@ -452,14 +458,27 @@ exports.updateStudent = async (req, res) => {
                 message: messages.MSG_NOT_FOUND,
             });
         }
+        transaction = await connection.sequelize.transaction();
         await Student.update(
             {...req.body},
             {
                 where: {
                     uuid: req.params.uuid,
                 },
-            }
+            }, {transaction}
         );
+
+        await Account.update(
+            {
+                username: req.body.student_code
+            },
+            {
+                where: {
+                    uuid: student.accountUuid
+                }
+            },
+            {transaction}
+        )
 
 
         const studentTraining = await StudentTrainingProgram.findOne({
@@ -467,7 +486,7 @@ exports.updateStudent = async (req, res) => {
                 studentUuid: req.params.uuid
             }
 
-        })
+        }, {transaction})
 
         if (studentTraining) {
 
@@ -480,21 +499,30 @@ exports.updateStudent = async (req, res) => {
                         studentUuid: req.params.uuid
                     }
 
-                }
+                }, {transaction}
             )
 
         } else {
             await StudentTrainingProgram.create({
                 studentUuid: req.params.uuid,
                 trainingProgramUuid: req.body.trainingProgramUuid
-            })
+            }, {transaction})
 
         }
-
+        await transaction.commit();
         res.status(200).json({
             message: messages.MSG_SUCCESS,
         });
     } catch (error) {
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    message: e.toString(),
+                });
+            }
+        }
         res.status(500).json({
             message: messages.MSG_CANNOT_UPDATE + constants.STUDENT + error,
         });
@@ -552,10 +580,9 @@ exports.updateAvatar = async (req, res) => {
         const DIR = path.join(__dirname, '../../public/uploads/');
         let filePath = DIR + avatarFile.filename;
         base64.encode(filePath, async function (err, base64String) {
-                if(base64String) {
+                if (base64String) {
                     avatarUrl = base64String
-                }
-                else {
+                } else {
                     res.status(500).json({
                         message: err
                     })
@@ -594,4 +621,50 @@ exports.updateAvatar = async (req, res) => {
             message: messages.MSG_CANNOT_UPDATE + constants.STUDENT,
         });
     }
+}
+
+exports.copyPlan = async (req, res) => {
+    const {studentUuid, courses} = req.body;
+    let transaction;
+
+    try {
+        transaction = await connection.sequelize.transaction();
+        await StudentCourse.destroy({
+            where: {
+                studentUuid: studentUuid
+            }
+        }, {transaction})
+
+        let dataInsert = courses.map((course) => {
+            return {
+                studentUuid,
+                courseUuid: course.courseUuid,
+                semester: course.semester,
+                working: 1
+            }
+        })
+
+        await StudentCourse.bulkCreate(dataInsert, {transaction});
+        await transaction.commit();
+
+        return res.status(201).json({
+            message: messages.MSG_SUCCESS
+        })
+
+    } catch (e) {
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    error: e.toString(),
+                });
+            }
+        }
+        res.status(500).json({
+            message: "Đã có lỗi xảy ra" + e,
+        });
+    }
+
+
 }

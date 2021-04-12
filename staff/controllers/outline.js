@@ -82,7 +82,7 @@ exports.createOutline = async (req, res) => {
                 await transaction.rollback();
             } catch (e) {
                 res.status(500).json({
-                    error: e.toString(),
+                    message: e.toString(),
                 });
             }
         }

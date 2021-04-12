@@ -15,6 +15,8 @@ router.post('/:uuid/avatar', multer.single('file'), studentController.updateAvat
 router.post('/course', studentController.addCourseToPlan);
 
 router.post('/training-program/follow', studentController.joinTrainingProgram);
-router.post('/training-program/unfollow', studentController.getOutTrainingProgram)
+router.post('/training-program/unfollow', studentController.getOutTrainingProgram);
+
+router.post('/course/copy-plan', studentController.copyPlan)
 
 module.exports = router;

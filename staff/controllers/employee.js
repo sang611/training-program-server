@@ -328,7 +328,6 @@ exports.updateEmployee = async (req, res) => {
 exports.updateAvatar = async (req, res) => {
   let avatarUrl = "";
   let avatarFile = req.file;
-
   try {
     avatarUrl = await uploadImageToStorage(avatarFile)
   } catch (e) {
