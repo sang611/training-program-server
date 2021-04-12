@@ -211,7 +211,7 @@ exports.getAllEmployees = async (req, res) => {
       ...paginate({ page, pageSize }),
     });
     res.status(200).json({
-      accounts: employees,
+      accounts: employees.filter(emp => emp.account.role != 0),
       totalResults: total,
       totalPages: totalPages,
     });
@@ -320,7 +320,7 @@ exports.updateEmployee = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
-      message: messages.MSG_CANNOT_UPDATE + constants.EMPLOYEE,
+      message: messages.MSG_CANNOT_UPDATE + constants.EMPLOYEE + error,
     });
   }
 };
