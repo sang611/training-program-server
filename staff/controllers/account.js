@@ -11,8 +11,11 @@ const Institution = require("../../models/Institution");
 const TrainingProgram = require("../../models/TrainingProgram");
 const UpdatingTicket = require("../../models/UpdatingTicket");
 const Major = require("../../models/Major");
+const ActivityInformation = require("../../models/ActivityInformation");
+const uuid = require("uuid");
 const {Op} = require("sequelize");
 const {sendMail} = require('../../lib/mailer/mailer')
+const Sequelize = require('sequelize');
 
 exports.login = async (req, res) => {
     try {
@@ -44,6 +47,39 @@ exports.login = async (req, res) => {
                         expiresIn: '2h',
                     },
                 );
+
+                let curentDate = `${Math.floor(Math.random() * 14) + 2}/${new Date().getMonth()+1}/${new Date().getFullYear()}`;
+                const activityInfo = await ActivityInformation.findOne({
+                    where: {
+                        date: curentDate,
+                        role: account.role
+                    }
+                })
+
+                if(account.role > 0) {
+                    if(activityInfo) {
+                        await ActivityInformation.update(
+                            {
+                                login_total: activityInfo.login_total + 1
+                            },
+                            {
+                                where: {
+                                    date: curentDate,
+                                    role: account.role
+                                }
+                            }
+                        )
+                    } else {
+                        await ActivityInformation.create({
+                            uuid: uuid(),
+                            date: curentDate,
+                            login_total: 1,
+                            role: account.role
+                        })
+                    }
+                }
+
+
 
                 res.cookie(constants.ACCESS_TOKEN, token, {
                     expires: new Date(Date.now() + constants.TOKEN_EXPIRES),
@@ -403,4 +439,25 @@ exports.resetPasswordByMail = async (req, res) => {
 
 
 
+}
+
+exports.getActivityInfo = async (req, res) => {
+    try {
+        const infors = await ActivityInformation.findAll({
+            where: Sequelize.where(Sequelize.fn('datediff', Sequelize.fn("NOW") , Sequelize.col('createdAt')), {
+                [Op.lte] : 7 // OR [Op.gt] : 5
+            }),
+            order: [
+                ['date', 'ASC']
+            ]
+        });
+        return res.status(200).json({
+            infors
+        })
+
+    } catch (e) {
+        return res.status(500).json({
+            message: e.toString()
+        })
+    }
 }

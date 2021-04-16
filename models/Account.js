@@ -23,7 +23,5 @@ const Account = connection.sequelize.define(
   }
 );
 
-Account.hasOne(Student);
-Account.hasOne(Employee);
 
 module.exports = Account;

@@ -18,5 +18,7 @@ router.delete("/account", accountController.deleteAccount);
 router.put("/loginInformation/:uuid", accountController.updateUsernamePassword);
 router.post("/password/reset", accountController.resetPasswordByMail);
 
+router.get("/activity/information", accountController.getActivityInfo);
+
 
 module.exports = router;

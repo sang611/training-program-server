@@ -17,6 +17,7 @@ const StudentTrainingProgram = require("../models/StudentTrainingProgram");
 const EmployeeCourse = require("../models/EmployeeCourse");
 const UpdatingTicket = require("../models/UpdatingTicket");
 const Major = require("../models/Major")
+const ActivityInformation = require("../models/ActivityInformation")
 
 Employee.belongsTo(Account);
 Account.hasOne(Employee);
