@@ -7,6 +7,7 @@ const readXlsxFile = require("read-excel-file/node");
 const paginate = require("../../lib/utils/paginate");
 const constructSearchQuery = require("../../lib/utils/constructSearchQuery");
 const connection = require("../../database/connection");
+const Outline = require("../../models/Outline");
 
 exports.createCourse = async (req, res) => {
   try {
@@ -58,7 +59,12 @@ exports.getAllCourses = async (req, res) => {
     const courses = await Course.findAll({
       where: searchQuery,
       include: [
-        {model: Institution}
+        {
+          model: Institution
+        },
+        {
+          model: Outline
+        }
       ],
       ...paginate({ page, pageSize }),
     });

@@ -65,6 +65,21 @@ exports.getAllTrainingProgram = async (req, res) => {
                 },
                 {
                     model: Course,
+                    include: [
+                        {
+                            model: Outline,
+                            include: [
+                                {
+                                    model: LearningOutcome
+                                }
+                            ],
+                            separate: true,
+                            order: [
+                                ['createdAt', 'DESC'],
+                            ],
+                        },
+
+                    ],
 
                 },
                 {
@@ -170,6 +185,104 @@ exports.updateTrainingProgram = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             message: messages.MSG_CANNOT_UPDATE + constants.TRAINING_PROGRAM
+        });
+    }
+}
+
+exports.lockTrainingProgram = async (req, res) => {
+    let {course_outlines} = req.body;
+    const {uuid} = req.params;
+    try {
+        const trainingProgram = await TrainingProgram.findOne({
+            where: {
+                uuid: uuid
+            }
+        });
+        if (!trainingProgram) {
+            return res.status(404).json({
+                message: constants.TRAINING_PROGRAM + messages.MSG_NOT_FOUND
+            });
+        }
+        await TrainingProgram.update(
+            {lock_edit: 1},
+            {
+                where: {
+                    uuid: uuid
+                }
+            }
+        )
+
+        await Promise.all(
+            course_outlines.map(async (course_outline) => {
+                await TrainingProgramCourse.update(
+                    {
+                        outlineUuid: course_outline.outlineUuid
+                    },
+                    {
+                        where: {
+                            courseUuid: course_outline.courseUuid,
+                            trainingProgramUuid: uuid
+                        }
+                    }
+                )
+            })
+        )
+
+        res.status(200).json({
+            message: messages.MSG_SUCCESS
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: messages.MSG_CANNOT_UPDATE + constants.TRAINING_PROGRAM + error
+        });
+    }
+}
+
+exports.unLockTrainingProgram = async (req, res) => {
+    let {course_outlines} = req.body;
+    const {uuid} = req.params;
+    try {
+        const trainingProgram = await TrainingProgram.findOne({
+            where: {
+                uuid: uuid
+            }
+        });
+        if (!trainingProgram) {
+            return res.status(404).json({
+                message: constants.TRAINING_PROGRAM + messages.MSG_NOT_FOUND
+            });
+        }
+        await TrainingProgram.update(
+            {lock_edit: 0},
+            {
+                where: {
+                    uuid: uuid
+                }
+            }
+        )
+
+        await Promise.all(
+            course_outlines.map(async (course_outline) => {
+                await TrainingProgramCourse.update(
+                    {
+                        outlineUuid: null
+                    },
+                    {
+                        where: {
+                            courseUuid: course_outline.courseUuid,
+                            trainingProgramUuid: uuid
+                        }
+                    }
+                )
+            })
+        )
+
+        res.status(200).json({
+            message: messages.MSG_SUCCESS
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: messages.MSG_CANNOT_UPDATE + constants.TRAINING_PROGRAM + error
         });
     }
 }
@@ -714,7 +827,9 @@ exports.addClassesToTrainingProgram = async (req, res) => {
         }
         transaction = await connection.sequelize.transaction();
         await TrainingProgram.update(
-            {classes},
+            {
+                classes: JSON.stringify(classes)
+            },
             {
                 where: {
                     uuid: req.params.uuid

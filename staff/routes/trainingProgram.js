@@ -10,6 +10,8 @@ router.post("/", checkAuth, trainingProgramController.createTrainingProgram);
 router.get("/", checkAuth, trainingProgramController.getAllTrainingProgram);
 router.get("/:uuid", checkAuth, trainingProgramController.getTrainingProgram);
 router.put("/:uuid", checkAuth, trainingProgramController.updateTrainingProgram);
+router.put("/:uuid/lock", checkAuth, trainingProgramController.lockTrainingProgram);
+router.put("/:uuid/unlock", checkAuth, trainingProgramController.unLockTrainingProgram);
 router.delete("/:uuid", checkAuth, trainingProgramController.deleteTrainingProgram);
 router.post("/courses", checkAuth, trainingProgramController.addCourseToTrainingProgram);
 
@@ -18,8 +20,9 @@ router.put("/:trainingProgramUuid/courses/:courseUuid/documents", checkAuth, tra
 router.put("/:trainingProgramUuid/courses/:courseUuid/lecturers/adding", checkAuth, trainingProgramController.addCourseLecturer);
 router.put("/:trainingProgramUuid/courses/:courseUuid/lecturers/removing", checkAuth, trainingProgramController.removeCourseLecturer);
 
-router.put("/courses/:trainingProgramUuid/planning", checkAuth, trainingProgramController.updateTrainingSequence);
 
+
+router.put("/courses/:trainingProgramUuid/planning", checkAuth, trainingProgramController.updateTrainingSequence);
 
 router.delete("/:trainingProgramUuid/courses/:courseUuid", checkAuth, trainingProgramController.deleteCourseToTrainingProgram);
 router.put("/:trainingProgramUuid/courses/:courseUuid", checkAuth, trainingProgramController.updateCourseToTrainingProgram);

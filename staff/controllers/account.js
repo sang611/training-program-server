@@ -305,7 +305,7 @@ exports.updateUsernamePassword = async (req, res) => {
                         }
                     )
 
-                    if (account.dataValues.role == 1 || account.dataValues.role == 2) {
+                    /*if (account.dataValues.role == 1 || account.dataValues.role == 2) {
                         await Employee.update({
                                 vnu_mail: req.body.newUsername
                             },
@@ -323,7 +323,7 @@ exports.updateUsernamePassword = async (req, res) => {
                                     accountUuid: req.params.uuid
                                 }
                             })
-                    }
+                    }*/
 
                     return res.status(200).json({
                         message: messages.MSG_SUCCESS

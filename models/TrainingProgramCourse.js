@@ -6,7 +6,6 @@ const Course = require("./Course");
 const TrainingProgramCourse = connection.sequelize.define(
     "training_program_course",
     {
-
         semester: {
             type: Sequelize.INTEGER
         },
@@ -27,6 +26,9 @@ const TrainingProgramCourse = connection.sequelize.define(
         },
         lecturers: {
             type: Sequelize.TEXT('long')
+        },
+        outlineUuid: {
+            type: Sequelize.UUID
         }
     }
 );
