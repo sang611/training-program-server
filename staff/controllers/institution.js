@@ -11,7 +11,7 @@ exports.createInstitution = async (req, res) => {
   let transaction;
   try {
     let logoFile = req.file;
-    let logoFilePath = "https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg";
+    let logoFilePath = "https://lh3.googleusercontent.com/proxy/i5989WXajzTbo1mWxbAnXYoLz1tfEB6In4zemy_8Fmwux0lySorGuk53uyXntRDmEDM5AHa8JGPumSWvTUGRBnM4Fpk";
     if(logoFile) {
       await uploadImageToStorage(logoFile).then((success) => {
         logoFilePath = success;

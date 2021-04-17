@@ -35,6 +35,9 @@ const Student = connection.sequelize.define("student", {
     class: {
         type: Sequelize.TEXT,
     },
+    grade: {
+        type: Sequelize.TEXT,
+    },
     note: {
         type: Sequelize.TEXT,
     },

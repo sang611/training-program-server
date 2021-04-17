@@ -48,7 +48,7 @@ exports.login = async (req, res) => {
                     },
                 );
 
-                let curentDate = `${Math.floor(Math.random() * 14) + 2}/${new Date().getMonth()+1}/${new Date().getFullYear()}`;
+                let curentDate = `${new Date().getDate()}/${new Date().getMonth()+1}/${new Date().getFullYear()}`;
                 const activityInfo = await ActivityInformation.findOne({
                     where: {
                         date: curentDate,
@@ -448,7 +448,7 @@ exports.getActivityInfo = async (req, res) => {
                 [Op.lte] : 7 // OR [Op.gt] : 5
             }),
             order: [
-                ['date', 'ASC']
+                ['createdAt', 'ASC']
             ]
         });
         return res.status(200).json({

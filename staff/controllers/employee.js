@@ -78,7 +78,7 @@ exports.createEmployee = async (req, res) => {
 
 exports.createEmployeesByFile = async (req, res) => {
   let filePath =
-    "/Web/KLTN/training-scheme-backend/uploads/" + req.file.filename;
+    "./public/uploads/" + req.file.filename;
   let listEmployees = [];
   let listAccounts = [];
   let transaction;
@@ -105,7 +105,7 @@ exports.createEmployeesByFile = async (req, res) => {
           rows.map(async (row) => {
             const accountUuid = uuid();
             const hashPassword = await bcrypt.hash(
-              row[9].toString(),
+              row[8].split("@")[0],
               saltRounds
             );
 
@@ -116,6 +116,12 @@ exports.createEmployeesByFile = async (req, res) => {
               role: 1,
             };
             listAccounts.push(account);
+
+            const institution = await Institution.findOne({
+              where: {
+                abbreviation: row[9]
+              }
+            })
 
             const newEmployee = {
               uuid: uuid(),
@@ -129,7 +135,7 @@ exports.createEmployeesByFile = async (req, res) => {
               birthday: row[2],
               gender: row[3],
               accountUuid,
-              institutionUuid: "3f8d5b1b-33f2-4334-8624-18a6ad47e839",
+              institutionUuid: institution.uuid,
             };
             listEmployees.push(newEmployee);
           })
@@ -187,7 +193,7 @@ exports.getAllEmployees = async (req, res) => {
       ],
     });
     const page = req.query.page || constants.DEFAULT_PAGE_VALUE;
-    const pageSize = req.query.pageSize || total;
+    const pageSize = 10;
     const totalPages = Math.ceil(total / pageSize);
     const employees = await Employee.findAll({
       where: employeeSearchQuery,
@@ -217,7 +223,7 @@ exports.getAllEmployees = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
-      message: messages.MSG_CANNOT_GET + constants.EMPLOYEES,
+      message: messages.MSG_CANNOT_GET + constants.EMPLOYEES + error,
     });
   }
 };
@@ -315,6 +321,16 @@ exports.updateEmployee = async (req, res) => {
         },
       }
     );
+    await Account.update(
+        {
+          username: req.body.vnu_mail
+        },
+        {
+          where: {
+            uuid: employee.accountUuid
+          }
+        },
+    )
     res.status(200).json({
       message: messages.MSG_SUCCESS,
     });

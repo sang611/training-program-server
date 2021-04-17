@@ -19,10 +19,12 @@ const Document = connection.sequelize.define("document", {
   thumbnail_link: {
     type: Sequelize.TEXT,
   },
-
   category: {
     type: Sequelize.TEXT,
   },
+  resourceUuid: {
+    type: Sequelize.UUID
+  }
 });
 
 module.exports = Document;

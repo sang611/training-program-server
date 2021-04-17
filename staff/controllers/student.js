@@ -53,20 +53,9 @@ exports.createStudent = async (req, res) => {
         await Student.create(
             {
                 uuid: uuid(),
-                fullname: req.body.fullname,
-                gender: req.body.gender,
-                birthday: req.body.birthday,
-                address: req.body.address,
-                student_code: req.body.student_code,
-                class: req.body.class,
-                email: req.body.email,
-                vnu_mail: req.body.vnu_mail,
-                phone_number: req.body.phone_number,
-                class: req.body.class,
-                note: req.body.note,
+                ...req.body,
                 accountUuid: accountUuid,
-                trainingProgramUuid: req.body.trainingProgramUuid,
-                majorUuid: req.body.majorUuid
+
             },
             {transaction}
         );
@@ -100,10 +89,6 @@ exports.createStudentsByFile = async (req, res) => {
         .then(async (rows) => {
             rows.shift();
             try {
-                await Promise.all(
-                    rows.map(async (row) => {
-                    })
-                );
 
                 await Promise.all(
                     rows.map(async (row) => {
@@ -114,8 +99,6 @@ exports.createStudentsByFile = async (req, res) => {
                             },
                         });
                         if (!account) {
-
-
                             const accountUuid = uuid();
 
                             const hashPassword = await bcrypt.hash(
@@ -159,7 +142,8 @@ exports.createStudentsByFile = async (req, res) => {
                                 gender: row[4],
                                 vnu_mail: row[1] + "@vnu.edu.vn",
                                 note: "",
-                                class: row[6],
+                                class: classCode,
+                                grade: 'K' + (row[6].split("-")[1] - '1955'),
                                 accountUuid,
                                 trainingProgramUuid: trainingProgram.uuid,
                                 majorUuid: major.uuid
@@ -223,8 +207,9 @@ exports.getAllStudents = async (req, res) => {
 
             ],
         });
+
         const page = req.query.page || constants.DEFAULT_PAGE_VALUE;
-        const pageSize = req.query.pageSize || total;
+        const pageSize = 10;
         const totalPages = Math.ceil(total / pageSize);
         const students = await Student.findAll({
             where: studentSearchQuery,
