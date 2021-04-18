@@ -361,7 +361,7 @@ exports.addCourseToTrainingProgram = async (req, res) => {
                 theory_time,
                 exercise_time,
                 practice_time,
-                course_type
+
             } = course;
 
             const newCourse = {
@@ -370,7 +370,8 @@ exports.addCourseToTrainingProgram = async (req, res) => {
                 theory_time,
                 practice_time,
                 exercise_time,
-                course_type
+                course_type: req.body.course_type,
+                knowledge_type: req.body.knowledge_type
             };
 
             listCourses.push(newCourse);
