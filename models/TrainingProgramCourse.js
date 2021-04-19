@@ -18,6 +18,9 @@ const TrainingProgramCourse = connection.sequelize.define(
         practice_time: {
             type: Sequelize.INTEGER
         },
+        self_time: {
+            type: Sequelize.INTEGER
+        },
         course_type: {
             type: Sequelize.STRING
         },
