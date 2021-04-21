@@ -66,6 +66,9 @@ exports.getAllCourses = async (req, res) => {
           model: Outline
         }
       ],
+      order: [
+        ['course_code', 'ASC'],
+      ],
       ...paginate({ page, pageSize }),
     });
     res.status(200).json({
