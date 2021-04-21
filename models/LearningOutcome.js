@@ -7,7 +7,7 @@ const LearningOutcome = connection.sequelize.define("learning_outcome", {
     primaryKey: true,
   },
   content: {
-    type: Sequelize.STRING,
+    type: Sequelize.TEXT('long'),
   },
   order: {
     type: Sequelize.INTEGER,

@@ -69,37 +69,54 @@ exports.uploadFile = async (req, res) => {
 
 exports.downloadFile = async (req, res) => {
     let dir = `public/downloads`; // directory from where node.js will look for downloaded file from google drive
-
-    let dest = fs.createWriteStream('public/downloads/tmp.pdf'); // file path where google drive function will save the file
     let progress = 0; // This will contain the download progress amount
 
-    downloadFileFromDrive(
-        req.params.fileId,
-        (driveResponse) => {
-            driveResponse.data
-                .on('end', () => {
-                    console.log('\nDone downloading file.');
-                    const file = `${dir}/tmp.pdf`; // file path from where node.js will send file to the requested user
-                    res.download(file); // Set disposition and send it.
-                })
-                .on('error', (err) => {
-                    console.error('Error downloading file.');
-                    res.status(500).json({
-                        message: 'Error downloading file.'
-                    })
+    try {
+        downloadFileFromDrive(
+            req.params.fileId,
+            async (driveResponse) =>  {
+                const beforePipe = driveResponse.data
+                    .on('end', () => {
+                        console.log('\nDone downloading file.');
 
-                })
-                .on('data', (d) => {
-                    progress += d.length;
-                    if (process.stdout.isTTY) {
-                        process.stdout.clearLine();
-                        process.stdout.cursorTo(0);
-                        process.stdout.write(`Downloaded ${progress} bytes`);
-                    }
-                })
-                .pipe(dest);
-        }
-    )
+                        let file = `${dir}/document.pdf`; // file path from where node.js will send file to the requested user
+
+                        if(driveResponse.headers['content-type'] == 'application/msword') {
+                            file = `${dir}/document.doc`
+                        }
+                        res.download(file); // Set disposition and send it.
+                    })
+                    .on('error', (err) => {
+                        console.error('Error downloading file.');
+                        res.status(500).json({
+                            message: 'Error downloading file.'
+                        })
+
+                    })
+                    .on('data', (d) => {
+                        progress += d.length;
+                        if (process.stdout.isTTY) {
+                            process.stdout.clearLine();
+                            process.stdout.cursorTo(0);
+                            process.stdout.write(`Downloaded ${progress} bytes`);
+                        }
+                    });
+                let dest = await fs.createWriteStream(`${dir}/document.pdf`); // file path where google drive function will save the file
+
+                if(driveResponse.headers['content-type'] == 'application/msword') {
+                    dest = await fs.createWriteStream(`${dir}/document.doc`)
+                }
+                
+                beforePipe.pipe(dest);
+            }
+        )
+    } catch (e) {
+        return res.status(500).json({
+            message: e.toString()
+        })
+    }
+
+
 }
 
 exports.getDocuments = async (req, res) => {

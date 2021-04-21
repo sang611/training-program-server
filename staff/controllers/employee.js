@@ -214,6 +214,9 @@ exports.getAllEmployees = async (req, res) => {
           ]
         }
       ],
+      order: [
+        ['fullname', 'ASC']
+      ],
       ...paginate({ page, pageSize }),
     });
     res.status(200).json({

@@ -89,10 +89,8 @@ exports.createStudentsByFile = async (req, res) => {
         .then(async (rows) => {
             rows.shift();
             try {
-
                 await Promise.all(
                     rows.map(async (row) => {
-
                         const account = await Account.findOne({
                             where: {
                                 username: row[1],
@@ -115,23 +113,30 @@ exports.createStudentsByFile = async (req, res) => {
 
                             listAccounts.push(newAccount);
 
-                            const classCode = row[6].split("CQ-")[1];
+                            const classCode = row[6].split("CQ-")[1].split('-').join('');
 
-                            const trainingProgram = await TrainingProgram.findOne(
-                                {
-                                    where: {
-                                        classes: {
-                                            [Op.like]: '%' + classCode + '%'
-                                        }
-                                    }
-                                }
-                            );
+                            const trainingPrograms = await TrainingProgram.findAll({});
+                            const trainingProgram = await trainingPrograms.find(item => {
+                                return item.classes ? JSON.parse(item.classes).includes(classCode) : false
+                            })
+
+                            if(!trainingProgram) {
+                                res.status(404).json({
+                                    message: "Không tồn tại chương trình đào tạo sinh viên theo học"
+                                })
+                            }
 
                             const major = await Major.findOne({
                                 where: {
                                     code: trainingProgram.training_program_code
                                 }
                             })
+
+                            if(!major) {
+                                res.status(404).json({
+                                    message: "Không có CTĐT nào đang áp dụng cho lớp của sinh viên"
+                                })
+                            }
 
                             const newStudent = {
                                 uuid: uuid(),
@@ -149,6 +154,11 @@ exports.createStudentsByFile = async (req, res) => {
                                 majorUuid: major.uuid
                             };
                             listStudents.push(newStudent);
+                        }
+                        else {
+                            return res.status(404).json({
+                                message: `Sinh viên mã số ${account.username} đã tồn tại trong hệ thống`
+                            })
                         }
                     })
                 );
@@ -179,7 +189,7 @@ exports.createStudentsByFile = async (req, res) => {
         })
         .catch((err) => {
             res.status(500).json({
-                error: err.toString()
+                message: err.toString()
             });
         });
 };
@@ -224,6 +234,9 @@ exports.getAllStudents = async (req, res) => {
                     include: [
                         {
                             model: Course
+                        },
+                        {
+                            model: Institution
                         }
                     ]
                 },
@@ -233,6 +246,9 @@ exports.getAllStudents = async (req, res) => {
                 {
                     model: Course
                 }
+            ],
+            order: [
+                ['fullname', 'ASC']
             ],
             ...paginate({page, pageSize}),
         });
@@ -258,9 +274,6 @@ exports.getAStudent = async (req, res) => {
                 {
                     model: Account,
                     attributes: [constants.UUID, constants.USERNAME, constants.ROLE],
-                },
-                {
-                    model: Institution
                 }
             ],
         });
