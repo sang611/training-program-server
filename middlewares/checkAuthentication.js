@@ -3,10 +3,9 @@ const messages = require("../lib/constants/messages");
 
 module.exports = (req, res, next) => {
   try {
-
-    if (req.cookies.access_token) {
-
-      const decoded = jwt.verify(req.cookies.access_token, process.env.JWT_KEY);
+    let access_token = req.cookies.access_token || (req.headers.authorization.split(" ")[1])
+    if (access_token) {
+      const decoded = jwt.verify(access_token, process.env.JWT_KEY);
       console.log(decoded)
       req.role = decoded.role;
       next();

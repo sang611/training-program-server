@@ -315,7 +315,7 @@ exports.deleteTrainingProgram = async (req, res) => {
 }
 
 exports.addCourseToTrainingProgram = async (req, res) => {
-    const {courses, trainingUuid, require_credits, course_type} = req.body;
+    const {courses, trainingUuid, course_type} = req.body;
     let listCourses = [];
     let transaction;
     try {
@@ -335,25 +335,6 @@ exports.addCourseToTrainingProgram = async (req, res) => {
             })
         );
         transaction = await connection.sequelize.transaction();
-
-        if (course_type == 'L') {
-            await TrainingProgram.update(
-                {
-                    require_L: require_credits
-                },
-                {
-                    where: {uuid: trainingUuid}
-                })
-        } else if (course_type == 'BT') {
-            await TrainingProgram.update(
-                {
-                    require_BT: require_credits
-                },
-                {
-                    where: {uuid: trainingUuid}
-                })
-        }
-
 
         courses.forEach((course) => {
             const {

@@ -16,9 +16,60 @@ const uuid = require("uuid");
 const {Op} = require("sequelize");
 const {sendMail} = require('../../lib/mailer/mailer')
 const Sequelize = require('sequelize');
+const ldap = require('ldapjs');
+
+function authenticateDN(request) {
+    return new Promise((resolve, reject) => {
+        const client = ldap.createClient({
+            url: ['ldap://10.10.0.220:389']
+        });
+
+        client.bind(`uid=${request.body.username},ou=dhcn,ou=sinhvien,dc=vnu,dc=vn`,request.body.password , (err) => {
+            if(err) {
+                console.log(err);
+                reject(err);
+            }
+            else {
+                resolve();
+                /*const opts = {
+                    filter: `&(uid=${request.body.username})(userPassword=${request.body.password})`,
+                    scope: 'sub',
+                };
+                client.search("dc=vnu,dc=vn", opts, (err, res) => {
+                    if (err) {
+                        console.log(err)
+                        reject(err);
+                    } else {
+                        res.on('searchEntry', (entry) => {
+                            console.log('entry: ' + JSON.stringify(entry.object));
+                            resolve(entry.object);
+                        });
+                        res.on('searchReference', (referral) => {
+                            console.log('referral: ' + referral.uris.join());
+                        });
+                        res.on('error', (err) => {
+                            console.error('error: ' + err.message);
+                            reject(err);
+                        });
+                        res.on('end', (result) => {
+                            console.log('status: ' + result.status);
+                            if(status === 0)
+                                reject(status);
+                            else
+                                resolve(result.status);
+                        });
+                    }
+                });*/
+            }
+        });
+    })
+}
+
 
 exports.login = async (req, res) => {
+
     try {
+
         const account = await Account.findOne({
             where: {
                 username: req.body.username
@@ -48,7 +99,7 @@ exports.login = async (req, res) => {
                     },
                 );
 
-                let curentDate = `${new Date().getDate()}/${new Date().getMonth()+1}/${new Date().getFullYear()}`;
+                let curentDate = `${new Date().getDate()}/${new Date().getMonth() + 1}/${new Date().getFullYear()}`;
                 const activityInfo = await ActivityInformation.findOne({
                     where: {
                         date: curentDate,
@@ -56,8 +107,8 @@ exports.login = async (req, res) => {
                     }
                 })
 
-                if(account.role > 0) {
-                    if(activityInfo) {
+                if (account.role > 0) {
+                    if (activityInfo) {
                         await ActivityInformation.update(
                             {
                                 login_total: activityInfo.login_total + 1
@@ -80,7 +131,6 @@ exports.login = async (req, res) => {
                 }
 
 
-
                 res.cookie(constants.ACCESS_TOKEN, token, {
                     expires: new Date(Date.now() + constants.TOKEN_EXPIRES),
                     overwrite: true,
@@ -101,6 +151,53 @@ exports.login = async (req, res) => {
                 message: messages.MSG_FAIL_LOGIN
             });
         }
+    } catch (error) {
+        return res.status(401).json({
+            message: messages.MSG_FAIL_LOGIN + error
+        });
+    }
+}
+
+exports.loginWithLDAP = async (req, res) => {
+    try {
+        await authenticateDN(req, res);
+
+        const account = await Account.findOne({
+            where: {
+                username: req.body.username
+            },
+            include: [
+                {
+                    model: Student,
+                },
+                {
+                    model: Employee
+                }
+            ]
+        });
+
+        const token = jwt.sign({
+                uuid: account.uuid,
+                username: account.username,
+                role: account.role,
+            },
+            process.env.JWT_KEY,
+            {
+                algorithm: "HS256",
+                expiresIn: '2h',
+            },
+        );
+
+        res.cookie(constants.ACCESS_TOKEN, token, {
+            expires: new Date(Date.now() + constants.TOKEN_EXPIRES),
+            overwrite: true,
+        });
+
+        return res.status(200).json({
+            message: messages.MSG_SUCCESS,
+            account,
+            token
+        });
     } catch (error) {
         return res.status(401).json({
             message: messages.MSG_FAIL_LOGIN + error
@@ -205,8 +302,7 @@ exports.getAUser = async (req, res) => {
                         }
                     ]
                 })
-            }
-            else {
+            } else {
                 user = await Employee.findOne(
                     {
                         where: {
@@ -242,8 +338,7 @@ exports.getAUser = async (req, res) => {
                     message: "Không tìm thấy người dùng"
                 })
             }
-        }
-        else {
+        } else {
             return res.status(404).json({
                 message: "Không tìm thấy người dùng"
             })
@@ -428,8 +523,7 @@ exports.resetPasswordByMail = async (req, res) => {
                     });
                 }
             })
-        }
-        else {
+        } else {
             res.status(404).json({
                 message: "Không tồn tại email này trong hệ thống"
             })
@@ -441,14 +535,13 @@ exports.resetPasswordByMail = async (req, res) => {
     }
 
 
-
 }
 
 exports.getActivityInfo = async (req, res) => {
     try {
         const infors = await ActivityInformation.findAll({
-            where: Sequelize.where(Sequelize.fn('datediff', Sequelize.fn("NOW") , Sequelize.col('createdAt')), {
-                [Op.lte] : 7 // OR [Op.gt] : 5
+            where: Sequelize.where(Sequelize.fn('datediff', Sequelize.fn("NOW"), Sequelize.col('createdAt')), {
+                [Op.lte]: 7 // OR [Op.gt] : 5
             }),
             order: [
                 ['createdAt', 'ASC']

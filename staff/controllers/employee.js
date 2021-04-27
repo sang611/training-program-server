@@ -42,14 +42,12 @@ exports.createEmployee = async (req, res) => {
     await Employee.create(
       {
         uuid: uuid(),
-        fullname: req.body.full_name,
-        birthday: req.body.birth_date,
+        fullname: req.body.fullname,
         gender: req.body.gender,
         academic_rank: req.body.academic_rank,
         academic_degree: req.body.academic_degree,
         email: req.body.email,
         vnu_mail: req.body.vnu_mail,
-        phone_number: req.body.phone_number,
         note: req.body.note,
         accountUuid: accountUuid,
         institutionUuid: req.body.institution,
