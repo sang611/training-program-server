@@ -5,6 +5,7 @@ const checkAccessToken = require('../../middlewares/checkAuthentication')
 const messages = require("../../lib/constants/messages");
 
 router.post('/login', accountController.login);
+router.post('/loginWithLDAP', accountController.loginWithLDAP);
 router.put('/:uuid/new-password', accountController.changePassword);
 router.post("/checkAccessToken", checkAccessToken, (req, res) => {
     res.json({message: messages.MSG_AUTHORIZED}

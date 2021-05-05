@@ -20,48 +20,7 @@ const ldap = require('ldapjs');
 
 function authenticateDN(request) {
     return new Promise((resolve, reject) => {
-        const client = ldap.createClient({
-            url: ['ldap://10.10.0.220:389']
-        });
 
-        client.bind(`uid=${request.body.username},ou=dhcn,ou=sinhvien,dc=vnu,dc=vn`,request.body.password , (err) => {
-            if(err) {
-                console.log(err);
-                reject(err);
-            }
-            else {
-                resolve();
-                /*const opts = {
-                    filter: `&(uid=${request.body.username})(userPassword=${request.body.password})`,
-                    scope: 'sub',
-                };
-                client.search("dc=vnu,dc=vn", opts, (err, res) => {
-                    if (err) {
-                        console.log(err)
-                        reject(err);
-                    } else {
-                        res.on('searchEntry', (entry) => {
-                            console.log('entry: ' + JSON.stringify(entry.object));
-                            resolve(entry.object);
-                        });
-                        res.on('searchReference', (referral) => {
-                            console.log('referral: ' + referral.uris.join());
-                        });
-                        res.on('error', (err) => {
-                            console.error('error: ' + err.message);
-                            reject(err);
-                        });
-                        res.on('end', (result) => {
-                            console.log('status: ' + result.status);
-                            if(status === 0)
-                                reject(status);
-                            else
-                                resolve(result.status);
-                        });
-                    }
-                });*/
-            }
-        });
     })
 }
 
@@ -69,7 +28,6 @@ function authenticateDN(request) {
 exports.login = async (req, res) => {
 
     try {
-
         const account = await Account.findOne({
             where: {
                 username: req.body.username
@@ -158,51 +116,93 @@ exports.login = async (req, res) => {
     }
 }
 
-exports.loginWithLDAP = async (req, res) => {
-    try {
-        await authenticateDN(req, res);
+exports.loginWithLDAP = (req, res) => {
 
-        const account = await Account.findOne({
-            where: {
-                username: req.body.username
-            },
-            include: [
-                {
-                    model: Student,
-                },
-                {
-                    model: Employee
-                }
-            ]
-        });
+    const client = ldap.createClient({
+        url: ['ldap://10.10.0.220:389']
+    });
 
-        const token = jwt.sign({
-                uuid: account.uuid,
-                username: account.username,
-                role: account.role,
-            },
-            process.env.JWT_KEY,
-            {
-                algorithm: "HS256",
-                expiresIn: '2h',
-            },
-        );
+    const opts = {
+        filter: `(uid=${req.body.username})`,
+        scope: 'sub',
+    };
+    client.search("dc=vnu,dc=vn", opts, (err, response) => {
+        console.log(err, response)
+        if (err) {
+            console.log(err)
+            return res.status(401).json({
+                message: err.toString()
+            })
+        } else {
+            response.on('searchEntry', (entry) => {
+                console.log('entry: ' + JSON.stringify(entry.object));
+                client.bind(entry.object.dn, req.body.password, async (err) => {
+                    if (err) {
+                        console.log(err);
+                        return res.status(401).json({
+                            message: err
+                        })
+                    } else {
+                        try {
+                            const account = await Account.findOne({
+                                where: {
+                                    username: req.body.username
+                                },
+                                include: [
+                                    {
+                                        model: Student,
+                                    },
+                                    {
+                                        model: Employee
+                                    }
+                                ]
+                            });
 
-        res.cookie(constants.ACCESS_TOKEN, token, {
-            expires: new Date(Date.now() + constants.TOKEN_EXPIRES),
-            overwrite: true,
-        });
+                            const token = jwt.sign({
+                                    uuid: account.uuid,
+                                    username: account.username,
+                                    role: account.role,
+                                },
+                                process.env.JWT_KEY,
+                                {
+                                    algorithm: "HS256",
+                                    expiresIn: '2h',
+                                },
+                            );
 
-        return res.status(200).json({
-            message: messages.MSG_SUCCESS,
-            account,
-            token
-        });
-    } catch (error) {
-        return res.status(401).json({
-            message: messages.MSG_FAIL_LOGIN + error
-        });
-    }
+                            res.cookie(constants.ACCESS_TOKEN, token, {
+                                expires: new Date(Date.now() + constants.TOKEN_EXPIRES),
+                                overwrite: true,
+                            });
+
+                            return res.status(200).json({
+                                message: messages.MSG_SUCCESS,
+                                account,
+                                token
+                            });
+                        } catch (error) {
+                            return res.status(401).json({
+                                message: messages.MSG_FAIL_LOGIN + error
+                            });
+                        }
+                    }
+                });
+            });
+            response.on('searchReference', (referral) => {
+                console.log('referral: ' + referral.uris.join());
+            });
+            response.on('error', (err) => {
+                console.error('error: ' + err.message);
+                return res.status(401).json({
+                    message: err.message
+                })
+            });
+            response.on('end', (result) => {
+                console.log('status: ' + result.status);
+            });
+        }
+    });
+
 }
 
 exports.changePassword = async (req, res) => {
