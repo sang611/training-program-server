@@ -107,7 +107,7 @@ exports.getAllLearningOutcomes = async (req, res) => {
                 },
             ],
 
-            //order: [['title', constants.ASC]],
+            order: [['content', constants.ASC]],
             ...paginate({ page, pageSize }),
         });
         res.status(200).json({

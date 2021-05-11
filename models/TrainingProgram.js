@@ -63,6 +63,12 @@ const TrainingProgram = connection.sequelize.define("training_program", {
   },
   require_BT: {
     type: Sequelize.INTEGER
+  },
+  type: {
+    type: Sequelize.TEXT
+  },
+  version: {
+    type: Sequelize.TEXT
   }
 
 });

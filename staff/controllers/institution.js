@@ -51,7 +51,6 @@ exports.createInstitution = async (req, res) => {
 }
 
 exports.getAllInstitutions =  async (req, res) => {
-
   try {
     const searchQuery = constructSearchQuery(req.query);
     const total = await Institution.count({
@@ -60,8 +59,10 @@ exports.getAllInstitutions =  async (req, res) => {
     const page = req.query.page || constants.DEFAULT_PAGE_VALUE;
     const pageSize = req.query.pageSize || total;
     const totalPages = Math.ceil(total / pageSize);
-    const institutions = await Institution.findAll({
-      where: searchQuery,
+    let institutions = await Institution.findAll({
+      where: {
+        ...searchQuery,
+      },
       include: [
         {
           model: Institution,
@@ -69,8 +70,11 @@ exports.getAllInstitutions =  async (req, res) => {
           nested: true
         }
       ],
+      order: [['vn_name', constants.ASC]],
       ...paginate({ page, pageSize })
     });
+
+
     res.status(200).json({
       institutions: institutions,
       totalResults: total,

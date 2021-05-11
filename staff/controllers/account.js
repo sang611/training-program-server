@@ -18,13 +18,6 @@ const {sendMail} = require('../../lib/mailer/mailer')
 const Sequelize = require('sequelize');
 const ldap = require('ldapjs');
 
-function authenticateDN(request) {
-    return new Promise((resolve, reject) => {
-
-    })
-}
-
-
 exports.login = async (req, res) => {
 
     try {
@@ -202,6 +195,12 @@ exports.loginWithLDAP = (req, res) => {
             });
         }
     });
+
+    client.on('error', (err) => {
+        return res.status(401).json({
+            message: err.toString()
+        })
+    })
 
 }
 

@@ -55,7 +55,6 @@ exports.createStudent = async (req, res) => {
                 uuid: uuid(),
                 ...req.body,
                 accountUuid: accountUuid,
-
             },
             {transaction}
         );

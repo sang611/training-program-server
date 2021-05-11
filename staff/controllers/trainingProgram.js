@@ -21,18 +21,19 @@ exports.createTrainingProgram = async (req, res) => {
         transaction = await connection.sequelize.transaction();
         await TrainingProgram.create({
             uuid: uuid(),
-            vn_name: req.body.vn_name,
+            ...req.body
+            /*vn_name: req.body.vn_name,
             en_name: req.body.en_name,
             training_program_code: req.body.training_program_code,
             graduation_title: req.body.graduation_title,
             training_duration: req.body.training_duration,
             graduation_diploma_vi: req.body.graduation_diploma_vi,
             graduation_diploma_en: req.body.graduation_diploma_en,
-            institutionUuid: req.body.institution,
+            institutionUuid: req.body.institutionUuid,
             common_destination: req.body.common_destination,
             specific_destination: req.body.specific_destination,
             admission_method: req.body.admission_method,
-            admission_scale: req.body.admission_scale
+            admission_scale: req.body.admission_scale*/
         }, {transaction})
         await transaction.commit();
         res.status(201).json({
