@@ -354,7 +354,8 @@ exports.addCourseToTrainingProgram = async (req, res) => {
                 exercise_time,
                 self_time,
                 course_type: req.body.course_type,
-                knowledge_type: req.body.knowledge_type
+                knowledge_type: req.body.knowledge_type,
+                outlineUuid: ""
             };
 
             listCourses.push(newCourse);
