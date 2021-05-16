@@ -154,11 +154,11 @@ exports.createStudentsByFile = async (req, res) => {
                             };
                             listStudents.push(newStudent);
                         }
-                        else {
+                        /*else {
                             return res.status(404).json({
                                 message: `Sinh viên mã số ${account.username} đã tồn tại trong hệ thống`
                             })
-                        }
+                        }*/
                     })
                 );
 

@@ -103,7 +103,7 @@ exports.downloadFile = async (req, res) => {
                     });
                 let dest = await fs.createWriteStream(`${dir}/document.pdf`); // file path where google drive function will save the file
 
-                if(driveResponse.headers['content-type'] == 'application/msword') {
+                if(driveResponse.headers['content-type'] === 'application/msword') {
                     dest = await fs.createWriteStream(`${dir}/document.doc`)
                 }
                 

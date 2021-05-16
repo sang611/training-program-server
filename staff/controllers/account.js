@@ -81,7 +81,6 @@ exports.login = async (req, res) => {
                     }
                 }
 
-
                 res.cookie(constants.ACCESS_TOKEN, token, {
                     expires: new Date(Date.now() + constants.TOKEN_EXPIRES),
                     overwrite: true,
@@ -150,6 +149,12 @@ exports.loginWithLDAP = (req, res) => {
                                     }
                                 ]
                             });
+
+                            if(!account) {
+                                return res.status(401).json({
+                                    message: messages.MSG_FAIL_LOGIN + error
+                                });
+                            }
 
                             const token = jwt.sign({
                                     uuid: account.uuid,
