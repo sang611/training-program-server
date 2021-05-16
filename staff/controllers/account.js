@@ -235,13 +235,13 @@ exports.changePassword = async (req, res) => {
                                 }
                             )
                             return res.status(200).json({
-                                message: messages.MSG_SUCCESS
+                                message: "Đổi mật khẩu đăng nhập thành công. Mật khẩu sẽ có hiệu lực trong lần đăng nhập tiếp theo"
                             });
                         }
                     })
                 } else {
                     return res.status(409).json({
-                        message: "Old password is not correct!"
+                        message: "Mật khẩu cũ không chính xác!"
                     });
                 }
             })

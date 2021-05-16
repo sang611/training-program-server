@@ -61,10 +61,7 @@ exports.getAllTrainingProgram = async (req, res) => {
         const trainingPrograms = await TrainingProgram.findAll({
             where: searchQuery,
             include: [
-                {
-                    model: Institution,
-                },
-                {
+                /*{
                     model: Course,
                     include: [
                         {
@@ -82,27 +79,7 @@ exports.getAllTrainingProgram = async (req, res) => {
 
                     ],
 
-                },
-                {
-                    model: LearningOutcome,
-                    include: [
-                        {
-                            model: LearningOutcome,
-                            as: 'clos',
-                            include: [
-                                {
-                                    model: Outline,
-                                    include: [
-                                        {
-                                            model: Course
-                                        }
-                                    ]
-                                }
-                            ]
-                        },
-
-                    ]
-                },
+                },*/
 
             ],
         });
@@ -135,8 +112,6 @@ exports.getTrainingProgram = async (req, res) => {
                             ['createdAt', 'DESC'],
                         ],
                     },
-
-
                 },
                 {
                     model: LearningOutcome,
@@ -159,6 +134,96 @@ exports.getTrainingProgram = async (req, res) => {
         });
     }
 };
+
+exports.getLocsMatrixTraining = async (req, res) => {
+    try {
+        let trainingProgram = await TrainingProgram.findOne({
+            where: {
+                uuid: req.params.uuid,
+            },
+            include: [
+                {
+                    model: LearningOutcome,
+                    include: [
+                        {
+                            model: LearningOutcome,
+                            as: 'clos',
+                            include: [
+                                {
+                                    model: Outline,
+                                    include: [
+                                        {
+                                            model: Course
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                    ]
+                },
+            ]
+        })
+
+        if (trainingProgram) {
+            return res.status(200).json({
+                trainingProgram: trainingProgram,
+            });
+        } else {
+            return res.status(404).json({
+                message: "Chương trình đào tạo không tồn tại.",
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            message: "Đã có lỗi xảy ra" + error,
+        });
+    }
+}
+
+exports.getCoursesMatrixTraining = async (req, res) => {
+    try {
+        let trainingProgram = await TrainingProgram.findOne({
+            where: {
+                uuid: req.params.uuid,
+            },
+            include: [
+                {
+                    model: Course,
+                    include: [
+                        {
+                            model: Outline,
+                            include: [
+                                {
+                                    model: LearningOutcome
+                                }
+                            ],
+                            separate: true,
+                            order: [
+                                ['createdAt', 'DESC'],
+                            ],
+                        },
+
+                    ],
+                },
+            ]
+        })
+
+        if (trainingProgram) {
+            return res.status(200).json({
+                trainingProgram: trainingProgram,
+            });
+        } else {
+            return res.status(404).json({
+                message: "Chương trình đào tạo không tồn tại.",
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            message: "Đã có lỗi xảy ra" + error,
+        });
+    }
+}
+
 
 exports.updateTrainingProgram = async (req, res) => {
     try {

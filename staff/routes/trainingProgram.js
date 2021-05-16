@@ -20,7 +20,8 @@ router.put("/:trainingProgramUuid/courses/:courseUuid/documents", checkAuth, tra
 router.put("/:trainingProgramUuid/courses/:courseUuid/lecturers/adding", checkAuth, trainingProgramController.addCourseLecturer);
 router.put("/:trainingProgramUuid/courses/:courseUuid/lecturers/removing", checkAuth, trainingProgramController.removeCourseLecturer);
 
-
+router.get("/:uuid/locs/matrix", checkAuth, trainingProgramController.getLocsMatrixTraining);
+router.get("/:uuid/courses/matrix", checkAuth, trainingProgramController.getCoursesMatrixTraining);
 
 router.put("/courses/:trainingProgramUuid/planning", checkAuth, trainingProgramController.updateTrainingSequence);
 
