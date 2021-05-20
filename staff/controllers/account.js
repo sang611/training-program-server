@@ -118,8 +118,10 @@ exports.loginWithLDAP = (req, res) => {
         filter: `(uid=${req.body.username})`,
         scope: 'sub',
     };
+
     client.search("dc=vnu,dc=vn", opts, (err, response) => {
         console.log(err, response)
+        let entries = [];
         if (err) {
             console.log(err)
             return res.status(401).json({
@@ -128,6 +130,8 @@ exports.loginWithLDAP = (req, res) => {
         } else {
             response.on('searchEntry', (entry) => {
                 console.log('entry: ' + JSON.stringify(entry.object));
+
+                entries.push(JSON.stringify(entry.object))
                 client.bind(entry.object.dn, req.body.password, async (err) => {
                     if (err) {
                         console.log(err);
@@ -188,6 +192,7 @@ exports.loginWithLDAP = (req, res) => {
             });
             response.on('searchReference', (referral) => {
                 console.log('referral: ' + referral.uris.join());
+
             });
             response.on('error', (err) => {
                 console.error('error: ' + err.message);
@@ -197,6 +202,12 @@ exports.loginWithLDAP = (req, res) => {
             });
             response.on('end', (result) => {
                 console.log('status: ' + result.status);
+                if(entries.length === 0) {
+                    return res.status(401).json({
+                        message: messages.MSG_FAIL_LOGIN
+                    })
+                }
+
             });
         }
     });
@@ -206,6 +217,7 @@ exports.loginWithLDAP = (req, res) => {
             message: err.toString()
         })
     })
+
 
 }
 

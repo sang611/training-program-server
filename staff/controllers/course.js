@@ -31,7 +31,7 @@ exports.createCourse = async (req, res) => {
       course_code: req.body.course_code,
       credits: req.body.credits,
       institutionUuid: req.body.institutionUuid*/
-    ...req.body
+      ...req.body
     })
 
     res.status(201).json({

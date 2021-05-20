@@ -42,7 +42,7 @@ const Student = connection.sequelize.define("student", {
         type: Sequelize.TEXT,
     },
     avatar: {
-        type: Sequelize.STRING(2000000000),
+        type: Sequelize.TEXT('long'),
     },
 
 });
