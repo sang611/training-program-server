@@ -13,6 +13,7 @@ const constructSearchQuery = require("../../lib/utils/constructSearchQuery");
 const readXlsxFile = require("read-excel-file/node");
 const Institution = require("../../models/Institution");
 const uploadImageToStorage = require('../../lib/utils/uploadToFirebase')
+const {Op} = require("sequelize");
 
 exports.createEmployee = async (req, res) => {
   const hashPassword = await bcrypt.hash(req.body.password, saltRounds);
@@ -185,7 +186,12 @@ exports.getAllEmployees = async (req, res) => {
       include: [
         {
           model: Account,
-          where: accountSearchQuery,
+          where: {
+            ...accountSearchQuery,
+            role: {
+              [Op.gt]: 0
+            }
+          },
         },
 
       ],
