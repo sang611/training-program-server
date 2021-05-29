@@ -196,6 +196,7 @@ exports.getAllEmployees = async (req, res) => {
 
       ],
     });
+
     const page = req.query.page || constants.DEFAULT_PAGE_VALUE;
     const pageSize = 10;
     const totalPages = Math.ceil(total / pageSize);
@@ -205,7 +206,12 @@ exports.getAllEmployees = async (req, res) => {
         {
           model: Account,
           attributes: [constants.UUID, constants.USERNAME, constants.ROLE],
-          where: accountSearchQuery,
+          where: {
+            ...accountSearchQuery,
+            role: {
+              [Op.gt]: 0
+            }
+          },
         },
         {
           model: Institution,
