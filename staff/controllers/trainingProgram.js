@@ -502,6 +502,7 @@ exports.updateCourseDocument = async (req, res) => {
                 }
             }, {transaction}
         )
+        await transaction.commit();
         res.status(200).json({
             message: messages.MSG_SUCCESS
         });

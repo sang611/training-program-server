@@ -62,9 +62,6 @@ exports.uploadFile = async (req, res) => {
             });
         }
     });
-
-
-
 }
 
 exports.downloadFile = async (req, res) => {
@@ -78,12 +75,26 @@ exports.downloadFile = async (req, res) => {
                 const beforePipe = driveResponse.data
                     .on('end', () => {
                         console.log('\nDone downloading file.');
+                        let file;
+                        let contentType = driveResponse.headers['content-type'];
 
-                        let file = `${dir}/document.pdf`; // file path from where node.js will send file to the requested user
-
-                        if(driveResponse.headers['content-type'] == 'application/msword') {
-                            file = `${dir}/document.doc`
+                        if(contentType === 'application/pdf') {
+                            file = `${dir}/document.pdf`; // file path from where node.js will send file to the requested user
                         }
+                        else if (contentType === 'application/msword' || contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                        {
+                            file = `${dir}/document.doc`; // file path from where node.js will send file to the requested user
+                        }
+                        else if (contentType === 'image/png') {
+                            file = `${dir}/document.png`; // file path from where node.js will send file to the requested user
+                        }
+                        else if (contentType === 'image/jpg') {
+                            file = `${dir}/document.jpg`; // file path from where node.js will send file to the requested user
+                        }
+                        else {
+                            file = `${dir}/document`; // file path from where node.js will send file to the requested user
+                        }
+
                         res.download(file); // Set disposition and send it.
                     })
                     .on('error', (err) => {
@@ -101,12 +112,26 @@ exports.downloadFile = async (req, res) => {
                             process.stdout.write(`Downloaded ${progress} bytes`);
                         }
                     });
-                let dest = await fs.createWriteStream(`${dir}/document.pdf`); // file path where google drive function will save the file
+                let dest;
+                let contentType = driveResponse.headers['content-type'];
 
-                if(driveResponse.headers['content-type'] === 'application/msword') {
+                if(contentType === 'application/pdf') {
+                    dest = await fs.createWriteStream(`${dir}/document.pdf`); // file path where google drive function will save the file
+                }
+                else if (contentType === 'application/msword' || contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                {
                     dest = await fs.createWriteStream(`${dir}/document.doc`)
                 }
-                
+                else if (contentType === 'image/png') {
+                    dest = await fs.createWriteStream(`${dir}/document.png`)
+                }
+                else if (contentType === 'image/jpg') {
+                    dest = await fs.createWriteStream(`${dir}/document.jpg`)
+                }
+                else {
+                    dest = await fs.createWriteStream(`${dir}/document`)
+                }
+
                 beforePipe.pipe(dest);
             }
         )
