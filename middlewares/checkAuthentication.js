@@ -8,6 +8,7 @@ module.exports = (req, res, next) => {
       const decoded = jwt.verify(access_token, process.env.JWT_KEY);
       console.log(decoded)
       req.role = decoded.role;
+      req.uuid = decoded.uuid;
       next();
     } else {
       return res.status(401).json({

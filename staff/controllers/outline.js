@@ -9,6 +9,8 @@ const Course = require("../../models/Course");
 const Institution = require("../../models/Institution");
 const UpdatingTicket = require("../../models/UpdatingTicket");
 const Employee = require("../../models/Employee");
+const EmployeeCourse = require("../../models/EmployeeCourse");
+const Account = require("../../models/Account");
 
 exports.createOutline = async (req, res) => {
     const outlineUuid = await uuid();
@@ -91,17 +93,15 @@ exports.createOutline = async (req, res) => {
         });
     }
 
-
 }
 
 exports.getAllOutline = async (req, res) => {
     const courseUuid = req.params.courseUuid;
+
     try {
-        //const searchQuery = constructSearchQuery(req.query);
         const outlines = await Outline.findAll({
             where: {
                 courseUuid: courseUuid,
-
             },
             include: [
                 {
