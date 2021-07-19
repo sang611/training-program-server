@@ -28,7 +28,7 @@ exports.createOutline = async (req, res) => {
     }
 
     try {
-        if (req.body.userRole == 0 || req.body.userRole == undefined) {
+        if (req.body.userRole === 0 || req.body.userRole === undefined) {
             let transaction;
 
             transaction = await connection.sequelize.transaction();
@@ -68,8 +68,6 @@ exports.createOutline = async (req, res) => {
             }, {transaction})
 
             await transaction.commit();
-
-
 
             let socket = req.app.get('socketIo');
             socket.emit('edit_outline', 'Có 1 yêu cầu chỉnh sửa đề cương!');
@@ -159,6 +157,61 @@ exports.getAnOutline = async (req, res) => {
     }
 };
 
+exports.updateOutline = async (req, res) => {
+    try {
+        let updatedOutline = {
+            lecturers: JSON.stringify(req.body.lecturers),
+            goal: req.body.goal,
+            summary_content: req.body.summaryContent,
+            detail_content: req.body.detailContent,
+            documents: req.body.documents,
+            teachingFormality: req.body.teachingFormality,
+            coursePolicy: req.body.coursePolicy,
+            examFormality: req.body.examFormality,
+            courseUuid: req.body.courseUuid
+        }
+
+        let transaction;
+
+        transaction = await connection.sequelize.transaction();
+        await Outline.update({
+            ...updatedOutline,
+            lecturers: JSON.stringify(req.body.lecturers),
+        },
+            {
+                where: {
+                    uuid: req.params.uuid
+                }
+            }
+        , {transaction})
+
+        await OutlineLearningOutcome.destroy({
+            where: {
+                outlineUuid: req.params.uuid
+            }
+        })
+
+        await Promise.all(
+            req.body.locs.map(async loc => {
+                await OutlineLearningOutcome.create({
+                    outlineUuid: req.params.uuid,
+                    learningOutcomeUuid: loc.uuid,
+                    level: loc.level || loc.outline_learning_outcome.level
+                }, {transaction})
+            })
+        )
+
+        await transaction.commit();
+        res.status(200).json({
+            message: messages.MSG_SUCCESS
+        });
+    } catch(error) {
+        res.status(500).json({
+            message: messages.MSG_CANNOT_UPDATE + constants.OUTLINE + error
+        });
+    }
+}
+
 exports.deleteOutline = async (req, res) => {
     try {
         const outline = await Outline.findOne({
@@ -215,8 +268,6 @@ exports.acceptUpdatedOutline = async (req, res) => {
         }
 
         try {
-
-
 
             transaction = await connection.sequelize.transaction();
             await Outline.create({

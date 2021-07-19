@@ -33,7 +33,7 @@ exports.createEmployee = async (req, res) => {
     transaction = await connection.sequelize.transaction();
     await Account.create(
       {
-        username: req.body.vnu_mail,
+        username: req.body.vnu_mail.split('@')[0],
         password: hashPassword,
         uuid: accountUuid,
         role: 2,
@@ -171,6 +171,9 @@ exports.createEmployeesByFile = async (req, res) => {
 
 exports.getAllEmployees = async (req, res) => {
   try {
+
+    const textSearch = req.query.textSearch;
+
     const searchQuery = constructSearchQuery(req.query);
     const employeeSearchQuery = {};
     const accountSearchQuery = {};
@@ -181,13 +184,36 @@ exports.getAllEmployees = async (req, res) => {
         accountSearchQuery[property] = searchQuery[property];
       }
     }
+
     const total = await Employee.count({
-      where: employeeSearchQuery,
+      where: {
+        [Op.and]: {
+          [Op.or]: {
+            fullname: {
+              [Op.like]: `%${textSearch}%`
+            },
+            email: {
+              [Op.like]: `%${textSearch}%`
+            },
+            vnu_mail: {
+              [Op.like]: `%${textSearch}%`
+            },
+            academic_rank: {
+              [Op.like]: `%${textSearch}%`
+            },
+            academic_degree: {
+              [Op.like]: `%${textSearch}%`
+            },
+          },
+          ...employeeSearchQuery
+        }
+
+      },
       include: [
         {
           model: Account,
           where: {
-            ...accountSearchQuery,
+
             role: {
               [Op.gt]: 0
             }
@@ -201,7 +227,28 @@ exports.getAllEmployees = async (req, res) => {
     const pageSize = 10;
     const totalPages = Math.ceil(total / pageSize);
     const employees = await Employee.findAll({
-      where: employeeSearchQuery,
+      where: {
+        [Op.and]: {
+          [Op.or]: {
+            fullname: {
+              [Op.like]: `%${textSearch}%`
+            },
+            email: {
+              [Op.like]: `%${textSearch}%`
+            },
+            vnu_mail: {
+              [Op.like]: `%${textSearch}%`
+            },
+            academic_rank: {
+              [Op.like]: `%${textSearch}%`
+            },
+            academic_degree: {
+              [Op.like]: `%${textSearch}%`
+            },
+          },
+          ...employeeSearchQuery
+        }
+      },
       include: [
         {
           model: Account,
@@ -336,7 +383,7 @@ exports.updateEmployee = async (req, res) => {
     );
     await Account.update(
         {
-          username: req.body.vnu_mail
+          username: req.body.vnu_mail.split('@')[0]
         },
         {
           where: {

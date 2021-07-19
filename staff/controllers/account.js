@@ -120,7 +120,7 @@ exports.loginWithLDAP = (req, res) => {
     };
 
     client.search("dc=vnu,dc=vn", opts, (err, response) => {
-        console.log(err, response)
+        console.log(err, response);
         let entries = [];
         if (err) {
             console.log(err)
@@ -217,7 +217,6 @@ exports.loginWithLDAP = (req, res) => {
             message: err.toString()
         })
     })
-
 
 }
 

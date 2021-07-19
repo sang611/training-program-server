@@ -195,6 +195,8 @@ exports.createStudentsByFile = async (req, res) => {
 
 exports.getAllStudents = async (req, res) => {
     try {
+        const textSearch = req.query.textSearch;
+
         const searchQuery = constructSearchQuery(req.query);
         const studentSearchQuery = {};
         const accountSearchQuery = {};
@@ -207,7 +209,28 @@ exports.getAllStudents = async (req, res) => {
         }
 
         const total = await Student.count({
-            where: studentSearchQuery,
+            where: {
+                [Op.and]: {
+                    [Op.or]: {
+                        fullname: {
+                            [Op.like]: `%${textSearch}%`
+                        },
+                        email: {
+                            [Op.like]: `%${textSearch}%`
+                        },
+                        vnu_mail: {
+                            [Op.like]: `%${textSearch}%`
+                        },
+                        class: {
+                            [Op.like]: `%${textSearch}%`
+                        },
+                        grade: {
+                            [Op.like]: `%${textSearch}%`
+                        },
+                    },
+                    ...studentSearchQuery
+                }
+            },
             include: [
                 {
                     model: Account,
@@ -221,7 +244,26 @@ exports.getAllStudents = async (req, res) => {
         const pageSize = 10;
         const totalPages = Math.ceil(total / pageSize);
         const students = await Student.findAll({
-            where: studentSearchQuery,
+            where: {
+                [Op.or]: {
+                    fullname: {
+                        [Op.like]: `%${textSearch}%`
+                    },
+                    email: {
+                        [Op.like]: `%${textSearch}%`
+                    },
+                    vnu_mail: {
+                        [Op.like]: `%${textSearch}%`
+                    },
+                    class: {
+                        [Op.like]: `%${textSearch}%`
+                    },
+                    grade: {
+                        [Op.like]: `%${textSearch}%`
+                    },
+                },
+                ...studentSearchQuery
+            },
             include: [
                 {
                     model: Account,
