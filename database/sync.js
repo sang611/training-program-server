@@ -18,6 +18,7 @@ const EmployeeCourse = require("../models/EmployeeCourse");
 const UpdatingTicket = require("../models/UpdatingTicket");
 const Major = require("../models/Major")
 const ActivityInformation = require("../models/ActivityInformation")
+const TrainingProgramType = require("../models/TrainingProgramType")
 
 Employee.belongsTo(Account);
 Account.hasOne(Employee);
@@ -80,6 +81,8 @@ Employee.hasMany(UpdatingTicket);
 UpdatingTicket.belongsTo(Outline);
 Outline.hasMany(UpdatingTicket);
 
+TrainingProgram.belongsTo(TrainingProgramType, {foreignKey: 'type'});
+TrainingProgramType.hasMany(TrainingProgram, {foreignKey: 'type'});
 
 module.exports = connection.sequelize.sync({
     force: false
