@@ -22,18 +22,7 @@ exports.createTrainingProgram = async (req, res) => {
         await TrainingProgram.create({
             uuid: uuid(),
             ...req.body
-            /*vn_name: req.body.vn_name,
-            en_name: req.body.en_name,
-            training_program_code: req.body.training_program_code,
-            graduation_title: req.body.graduation_title,
-            training_duration: req.body.training_duration,
-            graduation_diploma_vi: req.body.graduation_diploma_vi,
-            graduation_diploma_en: req.body.graduation_diploma_en,
-            institutionUuid: req.body.institutionUuid,
-            common_destination: req.body.common_destination,
-            specific_destination: req.body.specific_destination,
-            admission_method: req.body.admission_method,
-            admission_scale: req.body.admission_scale*/
+
         }, {transaction})
         await transaction.commit();
         res.status(201).json({
@@ -59,29 +48,7 @@ exports.getAllTrainingProgram = async (req, res) => {
     try {
         const searchQuery = constructSearchQuery(req.query);
         const trainingPrograms = await TrainingProgram.findAll({
-            where: searchQuery,
-            include: [
-                /*{
-                    model: Course,
-                    include: [
-                        {
-                            model: Outline,
-                            include: [
-                                {
-                                    model: LearningOutcome
-                                }
-                            ],
-                            separate: true,
-                            order: [
-                                ['createdAt', 'DESC'],
-                            ],
-                        },
-
-                    ],
-
-                },*/
-
-            ],
+            where: searchQuery
         });
         res.status(200).json({
             training_programs: trainingPrograms,
@@ -618,24 +585,74 @@ exports.removeCourseLecturer = async (req, res) => {
     }
 }
 
+exports.cloneATraining = async (req, res) => {
+    let transaction;
+    try {
+        transaction = await connection.sequelize.transaction();
+        const newUuid = uuid();
+        await TrainingProgram.create({
+            uuid: newUuid,
+            ...req.body.data
+        }, {transaction})
+
+        let trainingProgramCourses = await TrainingProgramCourse.findAll({
+            where: {
+                trainingProgramUuid: req.body.idClone
+            }
+        })
+
+        await TrainingProgramCourse.bulkCreate(
+            trainingProgramCourses.map((training) => {
+                training.dataValues.trainingProgramUuid = newUuid;
+                return training.dataValues;
+            }),
+            {transaction}
+        )
+
+        let trainingProgramLocs = await TrainingProgramLOC.findAll({
+            where: {
+                trainingProgramUuid: req.body.idClone
+            }
+        })
+
+        await TrainingProgramLOC.bulkCreate(
+            trainingProgramLocs.map((training) => {
+                training.dataValues.trainingProgramUuid = newUuid;
+                return training.dataValues;
+            }),
+            {transaction}
+        )
+
+
+        await transaction.commit();
+        res.status(201).json({
+            message: messages.MSG_SUCCESS
+        })
+    } catch (error) {
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    error: e.toString(),
+                });
+            }
+        }
+        res.status(500).json({
+            message: messages.MSG_CANNOT_CLONE + constants.TRAINING_PROGRAM
+        });
+    }
+}
+
+
+
+
+
 exports.updateTrainingSequence = async (req, res) => {
     const {trainingProgramUuid, coursesOfSemester, semester} = req.body;
     let transaction;
     try {
         transaction = await connection.sequelize.transaction();
-        /*await Promise.all(
-            coursesOfSemester.map(async courseUuid => {
-                TrainingProgramCourse.update(
-                    {semester},
-                    {
-                        where: {
-                            trainingProgramUuid,
-                            courseUuid
-                        }
-                    }
-                )
-            }, {transaction})
-        )*/
         await TrainingProgramCourse.update(
             {semester},
             {
