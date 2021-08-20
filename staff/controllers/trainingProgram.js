@@ -13,6 +13,7 @@ const readXlsxFile = require("read-excel-file/node");
 const LearningOutcome = require("../../models/LearningOutcome");
 const LearningOutcomePLO_CLO = require("../../models/LearningOutcomePLO_CLO");
 const Outline = require("../../models/Outline");
+const Employee = require("../../models/Employee");
 
 exports.createTrainingProgram = async (req, res) => {
     let transaction;
@@ -72,17 +73,28 @@ exports.getTrainingProgram = async (req, res) => {
                 },
                 {
                     model: Course,
-                    include: {
-                        model: Outline,
-                        separate: true,
-                        order: [
-                            ['createdAt', 'DESC'],
-                        ],
-                    },
+                    include: [
+                        {
+                            model: Outline,
+                            separate: true,
+                            order: [
+                                ['createdAt', 'DESC'],
+                            ],
+                        },
+                        {
+                            model: Employee,
+                            include: [
+                                {
+                                    model: Institution
+                                }
+                            ]
+                        }
+                    ]
                 },
                 {
                     model: LearningOutcome,
-                }
+                },
+
             ]
         });
 
@@ -375,7 +387,8 @@ exports.addCourseToTrainingProgram = async (req, res) => {
                 theory_time,
                 exercise_time,
                 practice_time,
-                self_time
+                self_time,
+                course_type
             } = course;
 
             const newCourse = {
@@ -385,7 +398,7 @@ exports.addCourseToTrainingProgram = async (req, res) => {
                 practice_time,
                 exercise_time,
                 self_time,
-                course_type: req.body.course_type,
+                course_type,
                 knowledge_type: req.body.knowledge_type,
                 outlineUuid: ""
             };
@@ -644,10 +657,6 @@ exports.cloneATraining = async (req, res) => {
     }
 }
 
-
-
-
-
 exports.updateTrainingSequence = async (req, res) => {
     const {trainingProgramUuid, coursesOfSemester, semester} = req.body;
     let transaction;
@@ -716,34 +725,34 @@ exports.deleteCourseToTrainingProgram = async (req, res) => {
 
 exports.updateCourseToTrainingProgram = async (req, res) => {
     let transaction;
-        try {
-            transaction = await connection.sequelize.transaction();
-            await TrainingProgramCourse.update(
-                {...req.body},
-                {
+    try {
+        transaction = await connection.sequelize.transaction();
+        await TrainingProgramCourse.update(
+            {...req.body},
+            {
                 where: {
                     trainingProgramUuid: req.params.trainingProgramUuid,
                     courseUuid: req.params.courseUuid
                 }
             }, {transaction})
-            await transaction.commit();
-            res.status(200).json({
-                message: messages.MSG_SUCCESS
-            });
-        } catch (e) {
-            if (transaction) {
-                try {
-                    await transaction.rollback();
-                } catch (e) {
-                    res.status(500).json({
-                        message: "Đã có lỗi truy vấn xảy ra",
-                    });
-                }
+        await transaction.commit();
+        res.status(200).json({
+            message: messages.MSG_SUCCESS
+        });
+    } catch (e) {
+        if (transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    message: "Đã có lỗi truy vấn xảy ra",
+                });
             }
-            res.status(500).json({
-                message: "Đã có lỗi xảy ra",
-            });
         }
+        res.status(500).json({
+            message: "Đã có lỗi xảy ra",
+        });
+    }
 }
 
 exports.addCourseToTrainingProgramByFile = async (req, res) => {
