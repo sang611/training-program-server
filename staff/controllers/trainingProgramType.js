@@ -1,6 +1,6 @@
 const TrainingProgramType = require('../../models/TrainingProgramType');
 const uuid = require('uuid/v4');
-const  messages = require('../../lib/constants/messages');
+const messages = require('../../lib/constants/messages');
 const constants = require('../../lib/constants/constants');
 
 exports.getAllTrainingProgramType = async (req, res) => {

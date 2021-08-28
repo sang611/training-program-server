@@ -2,7 +2,7 @@ const Sequelize = require('sequelize');
 const connection = require('../database/connection');
 
 const TrainingProgramType = connection.sequelize.define(
-    'trainingprogramtype',
+    'training_program_type',
     {
       uuid: {
         type: Sequelize.UUID,
@@ -20,3 +20,5 @@ const TrainingProgramType = connection.sequelize.define(
       }
     }
 )
+
+module.exports = TrainingProgramType;

@@ -65,7 +65,7 @@ const TrainingProgram = connection.sequelize.define("training_program", {
     type: Sequelize.INTEGER
   },
   type: {
-    type: Sequelize.UUID
+    type: Sequelize.TEXT
   },
   version: {
     type: Sequelize.TEXT
