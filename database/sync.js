@@ -18,6 +18,8 @@ const EmployeeCourse = require("../models/EmployeeCourse");
 const UpdatingTicket = require("../models/UpdatingTicket");
 const Major = require("../models/Major")
 const ActivityInformation = require("../models/ActivityInformation")
+const TrainingProgramType = require("../models/TrainingProgramType")
+const CourseClass = require("../models/CourseClass")
 
 Employee.belongsTo(Account);
 Account.hasOne(Employee);
@@ -80,6 +82,11 @@ Employee.hasMany(UpdatingTicket);
 UpdatingTicket.belongsTo(Outline);
 Outline.hasMany(UpdatingTicket);
 
+TrainingProgram.belongsTo(TrainingProgramType);
+TrainingProgramType.hasMany(TrainingProgram);
+
+CourseClass.belongsTo(Course);
+Course.hasMany(CourseClass);
 
 module.exports = connection.sequelize.sync({
     force: false
