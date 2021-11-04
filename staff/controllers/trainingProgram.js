@@ -14,6 +14,8 @@ const LearningOutcome = require("../../models/LearningOutcome");
 const LearningOutcomePLO_CLO = require("../../models/LearningOutcomePLO_CLO");
 const Outline = require("../../models/Outline");
 const Employee = require("../../models/Employee");
+const OutlineSnapshot = require("../../models/OutlineSnapshot");
+const departmentQuery = require("../../lib/utils/constructDepartmentQuery");
 
 exports.createTrainingProgram = async (req, res) => {
     let transaction;
@@ -23,7 +25,6 @@ exports.createTrainingProgram = async (req, res) => {
         await TrainingProgram.create({
             uuid: uuid(),
             ...req.body
-
         }, {transaction})
         await transaction.commit();
         res.status(201).json({
@@ -48,8 +49,12 @@ exports.createTrainingProgram = async (req, res) => {
 exports.getAllTrainingProgram = async (req, res) => {
     try {
         const searchQuery = constructSearchQuery(req.query);
+        const department = req.department || "";
         const trainingPrograms = await TrainingProgram.findAll({
-            where: searchQuery
+            where: {
+                ...searchQuery,
+                institutionUuid: departmentQuery(department)
+            }
         });
         res.status(200).json({
             training_programs: trainingPrograms,
@@ -63,6 +68,14 @@ exports.getAllTrainingProgram = async (req, res) => {
 
 exports.getTrainingProgram = async (req, res) => {
     try {
+        let {lock_edit} = await TrainingProgram.findOne({
+            raw: true,
+            where: {
+                uuid: req.params.uuid,
+            },
+            attributes: ["lock_edit"]
+        })
+
         let trainingProgram = await TrainingProgram.findOne({
             where: {
                 uuid: req.params.uuid,
@@ -75,11 +88,12 @@ exports.getTrainingProgram = async (req, res) => {
                     model: Course,
                     include: [
                         {
-                            model: Outline,
+                            model: lock_edit ? OutlineSnapshot : Outline,
                             separate: true,
                             order: [
                                 ['createdAt', 'DESC'],
                             ],
+
                         },
                         {
                             model: Employee,
@@ -257,8 +271,20 @@ exports.lockTrainingProgram = async (req, res) => {
             }
         )
 
+        const outlineSnapshots = [];
+
         await Promise.all(
             course_outlines.map(async (course_outline) => {
+                const outlineSnap = await Outline.findOne({
+                    where: {
+                        uuid: course_outline.outlineUuid
+                    }
+                    ,
+                    raw: true
+                })
+                outlineSnapshots.push(outlineSnap);
+               /* await OutlineSnapshot.bulkCreate(outlineSnapshots);
+
                 await TrainingProgramCourse.update(
                     {
                         outlineUuid: course_outline.outlineUuid
@@ -266,6 +292,22 @@ exports.lockTrainingProgram = async (req, res) => {
                     {
                         where: {
                             courseUuid: course_outline.courseUuid,
+                            trainingProgramUuid: uuid
+                        }
+                    }
+                )*/
+            })
+        )
+        await OutlineSnapshot.bulkCreate(outlineSnapshots);
+        await Promise.all(
+            outlineSnapshots.map(async (outlineSnap) => {
+                await TrainingProgramCourse.update(
+                    {
+                        outlineUuid: outlineSnap.uuid
+                    },
+                    {
+                        where: {
+                            courseUuid: outlineSnap.courseUuid,
                             trainingProgramUuid: uuid
                         }
                     }

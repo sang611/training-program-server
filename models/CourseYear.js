@@ -1,8 +1,8 @@
 const Sequelize = require('sequelize');
 const connection = require('../database/connection');
 
-const CourseClass = connection.sequelize.define(
-    'course_class',
+const CourseYear = connection.sequelize.define(
+    'course_year',
     {
         uuid: {
             type: Sequelize.UUID,
@@ -15,16 +15,13 @@ const CourseClass = connection.sequelize.define(
             type: Sequelize.STRING(15),
             unique: true
         },
-        class_size: {
-            type: Sequelize.INTEGER
+        fromYear: {
+            type: Sequelize.STRING(4)
         },
-        classroom: {
-            type: Sequelize.STRING(15)
-        },
-        class_schedule: {
-            type: Sequelize.STRING(50)
+        toYear: {
+            type: Sequelize.STRING(4)
         }
     }
 )
 
-module.exports = CourseClass;
+module.exports = CourseYear;

@@ -10,6 +10,7 @@ const connection = require("../../database/connection");
 const Outline = require("../../models/Outline");
 const EmployeeCourse = require("../../models/EmployeeCourse");
 const Employee = require("../../models/Employee");
+const departmentQuery = require("../../lib/utils/constructDepartmentQuery");
 
 exports.createCourse = async (req, res) => {
     let transaction;
@@ -73,14 +74,27 @@ exports.createCourse = async (req, res) => {
 exports.getAllCourses = async (req, res) => {
     try {
         const searchQuery = constructSearchQuery(req.query);
+        const insitutionUuid =  req.query.institutionUuid;
+        let department = req.department || "";
+        if(insitutionUuid && insitutionUuid !== "") {
+            department = insitutionUuid;
+        }
+        if (req.query.depAll) department = "";
+
         const total = await Course.count({
-            where: searchQuery,
+            where: {
+                ...searchQuery,
+                institutionUuid: departmentQuery(department)
+            },
         });
         const page = req.query.page || constants.DEFAULT_PAGE_VALUE;
         const pageSize = req.query.pageSize || total;
         const totalPages = Math.ceil(total / pageSize);
         const courses = await Course.findAll({
-            where: searchQuery,
+            where: {
+                ...searchQuery,
+                institutionUuid: departmentQuery(department)
+            },
             include: [
                 {
                     model: Institution
@@ -97,13 +111,14 @@ exports.getAllCourses = async (req, res) => {
             ],
             ...paginate({page, pageSize}),
         });
-        res.status(200).json({
+
+        return res.status(200).json({
             courses: courses,
             totalResults: total,
             totalPages: totalPages,
         });
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             message: "Đã có lỗi xảy ra",
         });
     }

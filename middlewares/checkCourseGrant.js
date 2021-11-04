@@ -3,28 +3,37 @@ const EmployeeCourse = require("../models/EmployeeCourse");
 const messages = require("../lib/constants/messages");
 
 module.exports = async (req, res, next) => {
-    if (req.role === 2 || req.role === 1) {
-        const employeeUuid = await Employee.findOne({
-            where: {
-                accountUuid: req.uuid
-            },
-            attributes: ["uuid"]
-        })
-        const isModerator = await EmployeeCourse.findOne({
-            where: {
-                employeeUuid: employeeUuid.dataValues.uuid,
-                courseUuid: req.params.courseUuid
-            },
-            attributes: ["isModerator"]
-        })
+    try {
 
-        if (!isModerator.dataValues.isModerator) {
-            return res.status(403).json({
-                message: messages.MSG_FORBIDDEN
+
+        if (req.role === 2) {
+            const employeeUuid = await Employee.findOne({
+                where: {
+                    accountUuid: req.uuid
+                },
+                attributes: ["uuid"],
+                raw: true
             })
-        } else {
-            next();
-        }
+            const isModerator = await EmployeeCourse.findOne({
+                where: {
+                    employeeUuid: employeeUuid.uuid,
+                    courseUuid: req.params.courseUuid
+                },
+                attributes: ["isModerator"],
+                raw: true
+            })
+
+            if ((isModerator && !isModerator.isModerator) || !isModerator) {
+                return res.status(403).json({
+                    message: messages.MSG_FORBIDDEN
+                })
+            } else {
+                next();
+            }
+        } else next();
+    } catch (e) {
+        return res.status(500).json({
+            message: "Đã có lỗi xảy ra"
+        })
     }
-    else next();
 }

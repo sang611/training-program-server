@@ -17,13 +17,20 @@ const {Op} = require("sequelize");
 const {sendMail} = require('../../lib/mailer/mailer')
 const Sequelize = require('sequelize');
 const ldap = require('ldapjs');
+const ROLES = require('../../lib/constants/roles')
+const connection = require("../../database/connection");
+
 
 exports.login = async (req, res) => {
 
     try {
         const account = await Account.findOne({
             where: {
-                username: req.body.username
+                [Op.or]: [
+                    {username: req.body.username},
+                    {username: req.body.username.split("@")[0]},
+                    {username: req.body.username + "@vnu.edu.vn"}
+                ]
             },
             include: [
                 {
@@ -38,10 +45,52 @@ exports.login = async (req, res) => {
             const match = await bcrypt.compare(req.body.password, account.password);
 
             if (match) {
+                let insId;
+                if(account.role === 1 || account.role === 2) {
+                    const {institutionUuid} = await Employee.findOne({
+                        raw: true,
+                        where: {
+                            accountUuid: account.uuid
+                        },
+                        attributes: ['institutionUuid']
+                    })
+                    insId = institutionUuid;
+                }
+                else if(account.role === 3) {
+                    const {institutionUuid} = await TrainingProgram.findOne({
+                        raw: true,
+                        attributes: ['institutionUuid'],
+                        include: {
+                            model: Student,
+                            where: {
+                                accountUuid: account.uuid
+                            }
+                        }
+                    })
+                    insId = institutionUuid;
+                }
+
+                let department = null;
+
+                if(insId) {
+                    let {parent_uuid} = await Institution.findOne({
+                        raw: true,
+                        attributes: ['parent_uuid'],
+                        where: {
+                            uuid: insId
+                        }
+                    })
+
+                    if(!parent_uuid) parent_uuid = insId;
+                    department = parent_uuid;
+                }
+
+
                 const token = jwt.sign({
                         uuid: account.uuid,
                         username: account.username,
                         role: account.role,
+                        department: department
                     },
                     process.env.JWT_KEY,
                     {
@@ -367,7 +416,7 @@ exports.getAUser = async (req, res) => {
 
 }
 
-exports.updateRoleAccount = async (req, res) => {
+let updateRoleAccount = async (req, res, role) => {
     let transaction;
     try {
         const account = await Account.findOne({
@@ -382,15 +431,17 @@ exports.updateRoleAccount = async (req, res) => {
                     message: messages.MSG_CANNOT_UPDATE
                 });
             } else {
-
+                transaction = await connection.sequelize.transaction();
                 await Account.update(
-                    {role: req.params.role},
+                    {role: role},
                     {
                         where: {
                             uuid: req.params.uuid
                         }
-                    }
+                    },
+                    {transaction}
                 )
+                await transaction.commit();
                 return res.status(200).json({
                     message: messages.MSG_SUCCESS
                 });
@@ -401,10 +452,28 @@ exports.updateRoleAccount = async (req, res) => {
             })
         }
     } catch (error) {
+        if(transaction) {
+            try {
+                await transaction.rollback();
+            } catch (e) {
+                res.status(500).json({
+                    message: e.toString(),
+                });
+            }
+
+        }
         return res.status(409).json({
             message: messages.MSG_CANNOT_UPDATE
         });
     }
+}
+
+exports.setModerator = async (req, res) => {
+    await updateRoleAccount(req, res, ROLES.MODERATOR)
+}
+
+exports.unSetModerator = async (req, res) => {
+    await updateRoleAccount(req, res, ROLES.LECTURER)
 }
 
 exports.deleteAccount = async (req, res) => {

@@ -196,7 +196,7 @@ exports.createStudentsByFile = async (req, res) => {
 exports.getAllStudents = async (req, res) => {
     try {
         const textSearch = req.query.textSearch;
-
+        const department = req.department || "";
         const searchQuery = constructSearchQuery(req.query);
         const studentSearchQuery = {};
         const accountSearchQuery = {};
@@ -205,6 +205,27 @@ exports.getAllStudents = async (req, res) => {
                 studentSearchQuery[property] = searchQuery[property];
             } else {
                 accountSearchQuery[property] = searchQuery[property];
+            }
+        }
+
+        let departments;
+        if (department !== "") {
+            const trainings = await TrainingProgram.findAll({
+                raw: true,
+                attributes: ['uuid'],
+                where: {
+                    institutionUuid: department
+                }
+            })
+            departments = trainings.map(dep => dep.uuid);
+        }
+
+        let depQuery = true;
+        if(departments) {
+            depQuery = {
+                trainingProgramUuid: {
+                    [Op.in]: departments
+                }
             }
         }
 
@@ -228,7 +249,8 @@ exports.getAllStudents = async (req, res) => {
                             [Op.like]: `%${textSearch}%`
                         },
                     },
-                    ...studentSearchQuery
+                    ...studentSearchQuery,
+                    ...depQuery
                 }
             },
             include: [
@@ -262,7 +284,8 @@ exports.getAllStudents = async (req, res) => {
                         [Op.like]: `%${textSearch}%`
                     },
                 },
-                ...studentSearchQuery
+                ...studentSearchQuery,
+                ...depQuery
             },
             include: [
                 {

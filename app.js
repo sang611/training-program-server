@@ -23,6 +23,9 @@ const trainingProgramRouter = require("./staff/routes/trainingProgram");
 const outlineRouter = require("./staff/routes/outline")
 const employeeCourseRouter = require('./staff/routes/employeeCourse')
 const updatingTicketRouter = require('./staff/routes/updatingTicket')
+const trainingProgramTypeRouter = require('./staff/routes/trainingProgramType')
+const courseClassRouter = require('./staff/routes/courseClass')
+const courseYearRouter = require('./staff/routes/courseYear')
 
 const sync = require("./database/sync")
 const {get10ListFile} = require("./lib/drive");
@@ -55,15 +58,14 @@ io.on("connection", (socket) => {
 
 app.set('socketIo', io);
 
-/*app.use(
+app.use(
     cors({
         credentials: true,
-        origin: ['http://localhost:3000', 'http://localhost:9999', 'http://112.137.129.236']
-
+        origin: ['http://localhost:3000', 'http://localhost:9999', 'http://112.137.129.236:9999']
     })
-);*/
+);
 
-app.use(cors(
+/*app.use(cors(
     {
         origin: function(origin, callback){
             return callback(null, true);
@@ -71,7 +73,7 @@ app.use(cors(
         optionsSuccessStatus: 200,
         credentials: true
     }
-));
+));*/
 
 
 app.use("/accounts", accountRoutes);
@@ -88,6 +90,9 @@ app.use("/training-programs", trainingProgramRouter);
 app.use("/outlines", outlineRouter);
 app.use("/employee-courses", employeeCourseRouter);
 app.use("/tickets", updatingTicketRouter);
+app.use("/training-program-types", trainingProgramTypeRouter);
+app.use("/course-class", courseClassRouter)
+app.use("/course-years", courseYearRouter)
 
 //get10ListFile();
 

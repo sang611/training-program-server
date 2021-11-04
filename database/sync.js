@@ -20,6 +20,8 @@ const Major = require("../models/Major")
 const ActivityInformation = require("../models/ActivityInformation")
 const TrainingProgramType = require("../models/TrainingProgramType")
 const CourseClass = require("../models/CourseClass")
+const CourseYear = require("../models/CourseYear")
+const OutlineSnapshot = require("../models/OutlineSnapshot");
 
 Employee.belongsTo(Account);
 Account.hasOne(Employee);
@@ -76,6 +78,9 @@ Outline.belongsTo(Course);
 Outline.belongsToMany(LearningOutcome, { through: {model: OutlineLearningOutcome, unique: false} });
 LearningOutcome.belongsToMany(Outline, { through: {model: OutlineLearningOutcome, unique: false} });
 
+Course.hasMany(OutlineSnapshot);
+OutlineSnapshot.belongsTo(Course);
+
 UpdatingTicket.belongsTo(Employee);
 Employee.hasMany(UpdatingTicket);
 
@@ -84,9 +89,6 @@ Outline.hasMany(UpdatingTicket);
 
 TrainingProgram.belongsTo(TrainingProgramType);
 TrainingProgramType.hasMany(TrainingProgram);
-
-CourseClass.belongsTo(Course);
-Course.hasMany(CourseClass);
 
 module.exports = connection.sequelize.sync({
     force: false

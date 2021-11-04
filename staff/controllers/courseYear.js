@@ -1,51 +1,53 @@
-const CourseClass = require('../../models/CourseClass');
+const CourseYear = require('../../models/CourseYear');
 const uuid = require('uuid/v4');
 const messages = require('../../lib/constants/messages');
 const constants = require('../../lib/constants/constants');
 
-exports.getAllCourseClass = async (req, res) => {
+exports.getAllCourseYear = async (req, res) => {
     try {
-        const courseClasses = await CourseClass.findAll();
+        const courseYears = await CourseYear.findAll();
         res.status(200).json({
-            courseClasses: courseClasses
+            courseYears: courseYears
         });
     } catch (error) {
         res.status(500).json({
-            messages: messages.MSG_CANNOT_GET + constants.COURSE_CLASSES
+            messages: messages.MSG_CANNOT_GET + constants.COURSE_YEARS
         });
     }
 }
 
-exports.createCourseClass = async (req, res) => {
+exports.createCourseYear = async (req, res) => {
     try {
-        await CourseClass.create({
+        await CourseYear.create({
             uuid: uuid(),
             code: req.body.code,
             name: req.body.name,
+            fromDate: req.body.fromDate,
+            toDate: req.body.toDate,
         })
         res.status(200).json({
             message: messages.MSG_SUCCESS
         });
     } catch(error) {
         res.status(500).json({
-            message: messages.MSG_CANNOT_CREATE + constants.COURSE_CLASS
+            message: messages.MSG_CANNOT_CREATE + constants.COURSE_Year
         });
     }
 }
 
-exports.deleteCourseClass = async (req, res) => {
+exports.deleteCourseYear = async (req, res) => {
     try {
-        const courseClass = await CourseClass.findOne({
+        const courseYear = await CourseYear.findOne({
             where: {
                 uuid: req.params.uuid
             }
         });
-        if (!courseClass) {
+        if (!courseYear) {
             return res.status(404).json({
-                message: constants.COURSE_CLASS + messages.MSG_NOT_FOUND
+                message: messages.MSG_NOT_FOUND + constants.COURSE_YEAR
             });
         }
-        await CourseClass.destroy({
+        await CourseYear.destroy({
             where: {
                 uuid: req.params.uuid
             }
@@ -55,24 +57,24 @@ exports.deleteCourseClass = async (req, res) => {
         });
     } catch(error) {
         res.status(500).json({
-            message: messages.MSG_CANNOT_DELETE + constants.COURSE_CLASS
+            message: messages.MSG_CANNOT_DELETE + constants.COURSE_YEAR
         });
     }
 }
 
-exports.updateCourseClass = async (req, res) => {
+exports.updateCourseYear = async (req, res) => {
     try {
-        const courseClass = await CourseClass.findOne({
+        const courseYear = await CourseYear.findOne({
             where: {
                 uuid: req.params.uuid
             }
         });
-        if (!courseClass) {
+        if (!courseYear) {
             return res.status(404).json({
-                message: constants.COURSE_CLASS + messages.MSG_NOT_FOUND
+                message: messages.MSG_NOT_FOUND + constants.COURSE_YEAR
             });
         }
-        await CourseClass.update(
+        await CourseYear.update(
             {...req.body},
             {
                 where: {
@@ -85,7 +87,7 @@ exports.updateCourseClass = async (req, res) => {
         });
     } catch(error) {
         res.status(500).json({
-            message: messages.MSG_CANNOT_UPDATE + constants.COURSE_CLASS
+            message: messages.MSG_CANNOT_UPDATE + constants.COURSE_YEAR
         });
     }
 }

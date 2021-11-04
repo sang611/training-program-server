@@ -13,13 +13,15 @@ router.post("/checkAccessToken", checkAccessToken, (req, res) => {
 })
 
 router.get("/:accountUuid", accountController.getAUser);
-router.put("/changeRole/:uuid/:role", accountController.updateRoleAccount);
-router.delete("/account", accountController.deleteAccount);
 
-router.put("/loginInformation/:uuid", accountController.updateUsernamePassword);
-router.post("/password/reset", accountController.resetPasswordByMail);
+router.put("/moderator/:uuid/", checkAccessToken, accountController.setModerator);
+router.put("/moderator/unset/:uuid/", checkAccessToken, accountController.unSetModerator);
+router.delete("/account", checkAccessToken, accountController.deleteAccount);
 
-router.get("/activity/information", accountController.getActivityInfo);
+router.put("/loginInformation/:uuid", checkAccessToken, accountController.updateUsernamePassword);
+router.post("/password/reset", checkAccessToken, accountController.resetPasswordByMail);
+
+router.get("/activity/information", checkAccessToken, accountController.getActivityInfo);
 
 
 module.exports = router;
