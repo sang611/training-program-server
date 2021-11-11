@@ -20,10 +20,7 @@ exports.createCourseYear = async (req, res) => {
     try {
         await CourseYear.create({
             uuid: uuid(),
-            code: req.body.code,
-            name: req.body.name,
-            fromDate: req.body.fromDate,
-            toDate: req.body.toDate,
+            ...req.body
         })
         res.status(200).json({
             message: messages.MSG_SUCCESS

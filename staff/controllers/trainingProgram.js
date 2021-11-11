@@ -16,6 +16,7 @@ const Outline = require("../../models/Outline");
 const Employee = require("../../models/Employee");
 const OutlineSnapshot = require("../../models/OutlineSnapshot");
 const departmentQuery = require("../../lib/utils/constructDepartmentQuery");
+const TrainingProgramType = require("../../models/TrainingProgramType");
 
 exports.createTrainingProgram = async (req, res) => {
     let transaction;
@@ -54,7 +55,12 @@ exports.getAllTrainingProgram = async (req, res) => {
             where: {
                 ...searchQuery,
                 institutionUuid: departmentQuery(department)
-            }
+            },
+           include: [
+               {
+                   model: TrainingProgramType
+               }
+           ]
         });
         res.status(200).json({
             training_programs: trainingPrograms,
@@ -108,7 +114,9 @@ exports.getTrainingProgram = async (req, res) => {
                 {
                     model: LearningOutcome,
                 },
-
+                {
+                    model: TrainingProgramType,
+                },
             ]
         });
 
